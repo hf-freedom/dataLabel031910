@@ -1,8 +1,14 @@
 <template>
   <div class="page-container">
     <el-card>
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="内部员工" name="internal">
+      <el-tabs
+        v-model="activeTab"
+        @tab-change="handleTabChange"
+      >
+        <el-tab-pane
+          label="内部员工"
+          name="internal"
+        >
           <el-row :gutter="20">
             <el-col :span="6">
               <el-card class="dept-tree">
@@ -29,30 +35,95 @@
             </el-col>
 
             <el-col :span="18">
-              <el-form :inline="true" :model="queryForm" class="query-form">
+              <el-form
+                :inline="true"
+                :model="queryForm"
+                class="query-form"
+              >
                 <el-form-item label="姓名">
-                  <el-input v-model="queryForm.name" placeholder="请输入姓名" clearable />
+                  <el-input
+                    v-model="queryForm.name"
+                    placeholder="请输入姓名"
+                    clearable
+                  />
                 </el-form-item>
                 <el-form-item label="职位">
-                  <el-input v-model="queryForm.position" placeholder="请输入职位" clearable />
+                  <el-input
+                    v-model="queryForm.position"
+                    placeholder="请输入职位"
+                    clearable
+                  />
                 </el-form-item>
                 <el-form-item>
-                  <el-button type="primary" @click="handleQuery">查询</el-button>
-                  <el-button @click="handleReset">重置</el-button>
+                  <el-button
+                    type="primary"
+                    @click="handleQuery"
+                  >
+                    查询
+                  </el-button>
+                  <el-button @click="handleReset">
+                    重置
+                  </el-button>
                 </el-form-item>
               </el-form>
 
-              <el-table :data="internalList" style="width: 100%" v-loading="loading">
-                <el-table-column prop="name" label="姓名" width="100" />
-                <el-table-column prop="department" label="部门" width="120" />
-                <el-table-column prop="position" label="职位" width="120" />
-                <el-table-column prop="phone" label="电话" width="130" />
-                <el-table-column prop="email" label="邮箱" show-overflow-tooltip />
-                <el-table-column label="操作" width="200" fixed="right">
+              <el-table
+                v-loading="loading"
+                :data="internalList"
+                style="width: 100%"
+              >
+                <el-table-column
+                  prop="name"
+                  label="姓名"
+                  width="100"
+                />
+                <el-table-column
+                  prop="department"
+                  label="部门"
+                  width="120"
+                />
+                <el-table-column
+                  prop="position"
+                  label="职位"
+                  width="120"
+                />
+                <el-table-column
+                  prop="phone"
+                  label="电话"
+                  width="130"
+                />
+                <el-table-column
+                  prop="email"
+                  label="邮箱"
+                  show-overflow-tooltip
+                />
+                <el-table-column
+                  label="操作"
+                  width="200"
+                  fixed="right"
+                >
                   <template #default="{ row }">
-                    <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
-                    <el-button type="primary" link @click="handleCall(row)">拨号</el-button>
-                    <el-button type="primary" link @click="handleEmail(row)">邮件</el-button>
+                    <el-button
+                      type="primary"
+                      link
+                      @click="handleDetail(row)"
+                    >
+                      详情
+                    </el-button>
+                    <el-button
+                      type="primary"
+                      link
+                      @click="handleCall(row)"
+                    >
+                      拨号
+                    </el-button>
+                    <el-button
+                      type="primary"
+                      link
+                      @click="handleEmail(row)"
+                    >
+                      邮件
+                    </el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -63,68 +134,169 @@
                 :page-sizes="[10, 20, 50, 100]"
                 :total="pagination.total"
                 layout="total, sizes, prev, pager, next, jumper"
+                class="mt-20"
                 @size-change="handleSizeChange"
                 @current-change="handleCurrentChange"
-                class="mt-20"
               />
             </el-col>
           </el-row>
         </el-tab-pane>
 
-        <el-tab-pane label="外部联系人" name="external">
-          <el-form :inline="true" :model="queryForm" class="query-form">
+        <el-tab-pane
+          label="外部联系人"
+          name="external"
+        >
+          <el-form
+            :inline="true"
+            :model="queryForm"
+            class="query-form"
+          >
             <el-form-item label="姓名">
-              <el-input v-model="queryForm.name" placeholder="请输入姓名" clearable />
+              <el-input
+                v-model="queryForm.name"
+                placeholder="请输入姓名"
+                clearable
+              />
             </el-form-item>
             <el-form-item label="分类">
-              <el-select v-model="queryForm.category" placeholder="请选择分类" clearable>
-                <el-option label="客户" value="客户" />
-                <el-option label="合作方" value="合作方" />
-                <el-option label="供应商" value="供应商" />
+              <el-select
+                v-model="queryForm.category"
+                placeholder="请选择分类"
+                clearable
+              >
+                <el-option
+                  label="客户"
+                  value="客户"
+                />
+                <el-option
+                  label="合作方"
+                  value="合作方"
+                />
+                <el-option
+                  label="供应商"
+                  value="供应商"
+                />
               </el-select>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="handleQuery">查询</el-button>
-              <el-button @click="handleReset">重置</el-button>
+              <el-button
+                type="primary"
+                @click="handleQuery"
+              >
+                查询
+              </el-button>
+              <el-button @click="handleReset">
+                重置
+              </el-button>
             </el-form-item>
           </el-form>
 
           <div class="table-actions">
-            <el-button type="primary" @click="handleCreate">
+            <el-button
+              type="primary"
+              @click="handleCreate"
+            >
               <el-icon><Plus /></el-icon>
               添加联系人
             </el-button>
-            <el-button @click="handleExport">导出</el-button>
-            <el-button @click="handleImport">导入</el-button>
+            <el-button @click="handleExport">
+              导出
+            </el-button>
+            <el-button @click="handleImport">
+              导入
+            </el-button>
           </div>
 
-          <el-table :data="externalList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="name" label="姓名" width="100" />
-            <el-table-column prop="category" label="分类" width="100">
+          <el-table
+            v-loading="loading"
+            :data="externalList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="name"
+              label="姓名"
+              width="100"
+            />
+            <el-table-column
+              prop="category"
+              label="分类"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag size="small">{{ row.category }}</el-tag>
+                <el-tag size="small">
+                  {{ row.category }}
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="company" label="公司" width="150" />
-            <el-table-column prop="position" label="职位" width="120" />
-            <el-table-column prop="phone" label="电话" width="130" />
-            <el-table-column prop="email" label="邮箱" show-overflow-tooltip />
-            <el-table-column prop="isFavorite" label="收藏" width="80">
+            <el-table-column
+              prop="company"
+              label="公司"
+              width="150"
+            />
+            <el-table-column
+              prop="position"
+              label="职位"
+              width="120"
+            />
+            <el-table-column
+              prop="phone"
+              label="电话"
+              width="130"
+            />
+            <el-table-column
+              prop="email"
+              label="邮箱"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="isFavorite"
+              label="收藏"
+              width="80"
+            >
               <template #default="{ row }">
-                <el-icon :size="20" :color="row.isFavorite ? '#f56c6c' : '#ccc'">
+                <el-icon
+                  :size="20"
+                  :color="row.isFavorite ? '#f56c6c' : '#ccc'"
+                >
                   <StarFilled v-if="row.isFavorite" />
                   <Star v-else />
                 </el-icon>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="250" fixed="right">
+            <el-table-column
+              label="操作"
+              width="250"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
-                <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-                <el-button type="primary" link @click="handleFavorite(row)">
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleDetail(row)"
+                >
+                  详情
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleEdit(row)"
+                >
+                  编辑
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleFavorite(row)"
+                >
                   {{ row.isFavorite ? '取消收藏' : '收藏' }}
                 </el-button>
-                <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+                <el-button
+                  type="danger"
+                  link
+                  @click="handleDelete(row)"
+                >
+                  删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -135,31 +307,87 @@
             :page-sizes="[10, 20, 50, 100]"
             :total="pagination.total"
             layout="total, sizes, prev, pager, next, jumper"
+            class="mt-20"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            class="mt-20"
           />
         </el-tab-pane>
 
-        <el-tab-pane label="常用联系人" name="favorite">
-          <el-table :data="favoriteList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="name" label="姓名" width="100" />
-            <el-table-column prop="type" label="类型" width="100">
+        <el-tab-pane
+          label="常用联系人"
+          name="favorite"
+        >
+          <el-table
+            v-loading="loading"
+            :data="favoriteList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="name"
+              label="姓名"
+              width="100"
+            />
+            <el-table-column
+              prop="type"
+              label="类型"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="row.type === 'internal' ? 'primary' : 'success'" size="small">
+                <el-tag
+                  :type="row.type === 'internal' ? 'primary' : 'success'"
+                  size="small"
+                >
                   {{ row.type === 'internal' ? '内部' : '外部' }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="department" label="部门/公司" width="150" />
-            <el-table-column prop="position" label="职位" width="120" />
-            <el-table-column prop="phone" label="电话" width="130" />
-            <el-table-column prop="email" label="邮箱" show-overflow-tooltip />
-            <el-table-column label="操作" width="200" fixed="right">
+            <el-table-column
+              prop="department"
+              label="部门/公司"
+              width="150"
+            />
+            <el-table-column
+              prop="position"
+              label="职位"
+              width="120"
+            />
+            <el-table-column
+              prop="phone"
+              label="电话"
+              width="130"
+            />
+            <el-table-column
+              prop="email"
+              label="邮箱"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              label="操作"
+              width="200"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleCall(row)">拨号</el-button>
-                <el-button type="primary" link @click="handleEmail(row)">邮件</el-button>
-                <el-button type="warning" link @click="handleFavorite(row)">取消收藏</el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleCall(row)"
+                >
+                  拨号
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleEmail(row)"
+                >
+                  邮件
+                </el-button>
+                <el-button
+                  type="warning"
+                  link
+                  @click="handleFavorite(row)"
+                >
+                  取消收藏
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -170,9 +398,9 @@
             :page-sizes="[10, 20, 50, 100]"
             :total="pagination.total"
             layout="total, sizes, prev, pager, next, jumper"
+            class="mt-20"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            class="mt-20"
           />
         </el-tab-pane>
       </el-tabs>
@@ -190,46 +418,108 @@
         :rules="formRules"
         label-width="100px"
       >
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="formData.name" placeholder="请输入姓名" />
+        <el-form-item
+          label="姓名"
+          prop="name"
+        >
+          <el-input
+            v-model="formData.name"
+            placeholder="请输入姓名"
+          />
         </el-form-item>
 
-        <el-form-item label="分类" prop="category">
-          <el-select v-model="formData.category" placeholder="请选择分类">
-            <el-option label="客户" value="客户" />
-            <el-option label="合作方" value="合作方" />
-            <el-option label="供应商" value="供应商" />
+        <el-form-item
+          label="分类"
+          prop="category"
+        >
+          <el-select
+            v-model="formData.category"
+            placeholder="请选择分类"
+          >
+            <el-option
+              label="客户"
+              value="客户"
+            />
+            <el-option
+              label="合作方"
+              value="合作方"
+            />
+            <el-option
+              label="供应商"
+              value="供应商"
+            />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="公司" prop="company">
-          <el-input v-model="formData.company" placeholder="请输入公司名称" />
+        <el-form-item
+          label="公司"
+          prop="company"
+        >
+          <el-input
+            v-model="formData.company"
+            placeholder="请输入公司名称"
+          />
         </el-form-item>
 
-        <el-form-item label="职位" prop="position">
-          <el-input v-model="formData.position" placeholder="请输入职位" />
+        <el-form-item
+          label="职位"
+          prop="position"
+        >
+          <el-input
+            v-model="formData.position"
+            placeholder="请输入职位"
+          />
         </el-form-item>
 
-        <el-form-item label="电话" prop="phone">
-          <el-input v-model="formData.phone" placeholder="请输入电话" />
+        <el-form-item
+          label="电话"
+          prop="phone"
+        >
+          <el-input
+            v-model="formData.phone"
+            placeholder="请输入电话"
+          />
         </el-form-item>
 
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="formData.email" placeholder="请输入邮箱" />
+        <el-form-item
+          label="邮箱"
+          prop="email"
+        >
+          <el-input
+            v-model="formData.email"
+            placeholder="请输入邮箱"
+          />
         </el-form-item>
 
         <el-form-item label="地址">
-          <el-input v-model="formData.address" type="textarea" :rows="2" placeholder="请输入地址" />
+          <el-input
+            v-model="formData.address"
+            type="textarea"
+            :rows="2"
+            placeholder="请输入地址"
+          />
         </el-form-item>
 
         <el-form-item label="备注">
-          <el-input v-model="formData.remark" type="textarea" :rows="2" placeholder="请输入备注" />
+          <el-input
+            v-model="formData.remark"
+            type="textarea"
+            :rows="2"
+            placeholder="请输入备注"
+          />
         </el-form-item>
       </el-form>
 
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleSubmit"
+        >
+          确定
+        </el-button>
       </template>
     </el-dialog>
 
@@ -238,26 +528,64 @@
       title="联系人详情"
       width="600px"
     >
-      <div class="contact-detail" v-if="currentContact">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="姓名">{{ currentContact.name }}</el-descriptions-item>
+      <div
+        v-if="currentContact"
+        class="contact-detail"
+      >
+        <el-descriptions
+          :column="2"
+          border
+        >
+          <el-descriptions-item label="姓名">
+            {{ currentContact.name }}
+          </el-descriptions-item>
           <el-descriptions-item label="类型">
             <el-tag :type="currentContact.type === 'internal' ? 'primary' : 'success'">
               {{ currentContact.type === 'internal' ? '内部员工' : '外部联系人' }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="部门/公司">{{ currentContact.department || currentContact.company }}</el-descriptions-item>
-          <el-descriptions-item label="职位">{{ currentContact.position }}</el-descriptions-item>
-          <el-descriptions-item label="电话">{{ currentContact.phone }}</el-descriptions-item>
-          <el-descriptions-item label="邮箱">{{ currentContact.email }}</el-descriptions-item>
-          <el-descriptions-item label="地址" :span="2">{{ currentContact.address || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="备注" :span="2">{{ currentContact.remark || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="部门/公司">
+            {{ currentContact.department || currentContact.company }}
+          </el-descriptions-item>
+          <el-descriptions-item label="职位">
+            {{ currentContact.position }}
+          </el-descriptions-item>
+          <el-descriptions-item label="电话">
+            {{ currentContact.phone }}
+          </el-descriptions-item>
+          <el-descriptions-item label="邮箱">
+            {{ currentContact.email }}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="地址"
+            :span="2"
+          >
+            {{ currentContact.address || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="备注"
+            :span="2"
+          >
+            {{ currentContact.remark || '-' }}
+          </el-descriptions-item>
         </el-descriptions>
       </div>
       <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
-        <el-button type="primary" @click="handleCall(currentContact!)">拨号</el-button>
-        <el-button type="primary" @click="handleEmail(currentContact!)">邮件</el-button>
+        <el-button @click="detailVisible = false">
+          关闭
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleCall(currentContact!)"
+        >
+          拨号
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleEmail(currentContact!)"
+        >
+          邮件
+        </el-button>
       </template>
     </el-dialog>
   </div>

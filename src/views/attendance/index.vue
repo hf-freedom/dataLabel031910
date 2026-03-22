@@ -1,18 +1,48 @@
 <template>
   <div class="page-container">
     <el-card>
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="考勤记录" name="record">
-          <el-form :inline="true" :model="queryForm" class="query-form">
+      <el-tabs
+        v-model="activeTab"
+        @tab-change="handleTabChange"
+      >
+        <el-tab-pane
+          label="考勤记录"
+          name="record"
+        >
+          <el-form
+            :inline="true"
+            :model="queryForm"
+            class="query-form"
+          >
             <el-form-item label="员工姓名">
-              <el-input v-model="queryForm.employeeName" placeholder="请输入员工姓名" clearable />
+              <el-input
+                v-model="queryForm.employeeName"
+                placeholder="请输入员工姓名"
+                clearable
+              />
             </el-form-item>
             <el-form-item label="部门">
-              <el-select v-model="queryForm.department" placeholder="请选择部门" clearable>
-                <el-option label="全部" value="" />
-                <el-option label="技术部" value="技术部" />
-                <el-option label="行政部" value="行政部" />
-                <el-option label="人力资源部" value="人力资源部" />
+              <el-select
+                v-model="queryForm.department"
+                placeholder="请选择部门"
+                clearable
+              >
+                <el-option
+                  label="全部"
+                  value=""
+                />
+                <el-option
+                  label="技术部"
+                  value="技术部"
+                />
+                <el-option
+                  label="行政部"
+                  value="行政部"
+                />
+                <el-option
+                  label="人力资源部"
+                  value="人力资源部"
+                />
               </el-select>
             </el-form-item>
             <el-form-item label="日期">
@@ -24,18 +54,47 @@
               />
             </el-form-item>
             <el-form-item label="状态">
-              <el-select v-model="queryForm.status" placeholder="请选择状态" clearable>
-                <el-option label="全部" value="" />
-                <el-option label="正常" value="normal" />
-                <el-option label="迟到" value="late" />
-                <el-option label="早退" value="early_leave" />
-                <el-option label="旷工" value="absent" />
-                <el-option label="请假" value="leave" />
+              <el-select
+                v-model="queryForm.status"
+                placeholder="请选择状态"
+                clearable
+              >
+                <el-option
+                  label="全部"
+                  value=""
+                />
+                <el-option
+                  label="正常"
+                  value="normal"
+                />
+                <el-option
+                  label="迟到"
+                  value="late"
+                />
+                <el-option
+                  label="早退"
+                  value="early_leave"
+                />
+                <el-option
+                  label="旷工"
+                  value="absent"
+                />
+                <el-option
+                  label="请假"
+                  value="leave"
+                />
               </el-select>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="handleQuery">查询</el-button>
-              <el-button @click="handleReset">重置</el-button>
+              <el-button
+                type="primary"
+                @click="handleQuery"
+              >
+                查询
+              </el-button>
+              <el-button @click="handleReset">
+                重置
+              </el-button>
             </el-form-item>
           </el-form>
 
@@ -46,35 +105,94 @@
             </el-button>
           </div>
 
-          <el-table :data="recordList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="employeeName" label="员工姓名" width="100" />
-            <el-table-column prop="department" label="部门" width="120" />
-            <el-table-column prop="date" label="日期" width="120" />
-            <el-table-column prop="checkInTime" label="签到时间" width="100" />
-            <el-table-column prop="checkOutTime" label="签退时间" width="100" />
-            <el-table-column prop="status" label="状态" width="100">
+          <el-table
+            v-loading="loading"
+            :data="recordList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="employeeName"
+              label="员工姓名"
+              width="100"
+            />
+            <el-table-column
+              prop="department"
+              label="部门"
+              width="120"
+            />
+            <el-table-column
+              prop="date"
+              label="日期"
+              width="120"
+            />
+            <el-table-column
+              prop="checkInTime"
+              label="签到时间"
+              width="100"
+            />
+            <el-table-column
+              prop="checkOutTime"
+              label="签退时间"
+              width="100"
+            />
+            <el-table-column
+              prop="status"
+              label="状态"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)" size="small">
+                <el-tag
+                  :type="getStatusType(row.status)"
+                  size="small"
+                >
                   {{ getStatusText(row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="leaveType" label="请假类型" width="100">
+            <el-table-column
+              prop="leaveType"
+              label="请假类型"
+              width="100"
+            >
               <template #default="{ row }">
                 {{ row.leaveType || '-' }}
               </template>
             </el-table-column>
-            <el-table-column prop="isAbnormal" label="异常标记" width="100">
+            <el-table-column
+              prop="isAbnormal"
+              label="异常标记"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="row.isAbnormal ? 'danger' : 'success'" size="small">
+                <el-tag
+                  :type="row.isAbnormal ? 'danger' : 'success'"
+                  size="small"
+                >
                   {{ row.isAbnormal ? '异常' : '正常' }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right">
+            <el-table-column
+              label="操作"
+              width="150"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
-                <el-button type="warning" link @click="handleAbnormal(row)" v-if="row.isAbnormal">标记</el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleDetail(row)"
+                >
+                  详情
+                </el-button>
+                <el-button
+                  v-if="row.isAbnormal"
+                  type="warning"
+                  link
+                  @click="handleAbnormal(row)"
+                >
+                  标记
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -85,23 +203,38 @@
             :page-sizes="[10, 20, 50, 100]"
             :total="pagination.total"
             layout="total, sizes, prev, pager, next, jumper"
+            class="mt-20"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            class="mt-20"
           />
         </el-tab-pane>
 
-        <el-tab-pane label="考勤统计" name="statistics">
+        <el-tab-pane
+          label="考勤统计"
+          name="statistics"
+        >
           <el-row :gutter="20">
             <el-col :span="6">
               <el-card class="stat-card">
                 <div class="stat-content">
-                  <div class="stat-icon" style="background: #409eff">
-                    <el-icon :size="32" color="#fff"><User /></el-icon>
+                  <div
+                    class="stat-icon"
+                    style="background: #409eff"
+                  >
+                    <el-icon
+                      :size="32"
+                      color="#fff"
+                    >
+                      <User />
+                    </el-icon>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ statistics.totalEmployees }}</div>
-                    <div class="stat-label">总人数</div>
+                    <div class="stat-value">
+                      {{ statistics.totalEmployees }}
+                    </div>
+                    <div class="stat-label">
+                      总人数
+                    </div>
                   </div>
                 </div>
               </el-card>
@@ -109,12 +242,24 @@
             <el-col :span="6">
               <el-card class="stat-card">
                 <div class="stat-content">
-                  <div class="stat-icon" style="background: #67c23a">
-                    <el-icon :size="32" color="#fff"><CircleCheck /></el-icon>
+                  <div
+                    class="stat-icon"
+                    style="background: #67c23a"
+                  >
+                    <el-icon
+                      :size="32"
+                      color="#fff"
+                    >
+                      <CircleCheck />
+                    </el-icon>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ statistics.normalRate }}%</div>
-                    <div class="stat-label">正常出勤率</div>
+                    <div class="stat-value">
+                      {{ statistics.normalRate }}%
+                    </div>
+                    <div class="stat-label">
+                      正常出勤率
+                    </div>
                   </div>
                 </div>
               </el-card>
@@ -122,12 +267,24 @@
             <el-col :span="6">
               <el-card class="stat-card">
                 <div class="stat-content">
-                  <div class="stat-icon" style="background: #e6a23c">
-                    <el-icon :size="32" color="#fff"><Clock /></el-icon>
+                  <div
+                    class="stat-icon"
+                    style="background: #e6a23c"
+                  >
+                    <el-icon
+                      :size="32"
+                      color="#fff"
+                    >
+                      <Clock />
+                    </el-icon>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ statistics.lateCount }}</div>
-                    <div class="stat-label">迟到次数</div>
+                    <div class="stat-value">
+                      {{ statistics.lateCount }}
+                    </div>
+                    <div class="stat-label">
+                      迟到次数
+                    </div>
                   </div>
                 </div>
               </el-card>
@@ -135,19 +292,34 @@
             <el-col :span="6">
               <el-card class="stat-card">
                 <div class="stat-content">
-                  <div class="stat-icon" style="background: #f56c6c">
-                    <el-icon :size="32" color="#fff"><Warning /></el-icon>
+                  <div
+                    class="stat-icon"
+                    style="background: #f56c6c"
+                  >
+                    <el-icon
+                      :size="32"
+                      color="#fff"
+                    >
+                      <Warning />
+                    </el-icon>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ statistics.absentCount }}</div>
-                    <div class="stat-label">旷工次数</div>
+                    <div class="stat-value">
+                      {{ statistics.absentCount }}
+                    </div>
+                    <div class="stat-label">
+                      旷工次数
+                    </div>
                   </div>
                 </div>
               </el-card>
             </el-col>
           </el-row>
 
-          <el-row :gutter="20" class="mt-20">
+          <el-row
+            :gutter="20"
+            class="mt-20"
+          >
             <el-col :span="12">
               <el-card>
                 <template #header>
@@ -155,15 +327,48 @@
                     <span>部门考勤统计</span>
                   </div>
                 </template>
-                <el-table :data="deptStatistics" style="width: 100%">
-                  <el-table-column prop="department" label="部门" />
-                  <el-table-column prop="total" label="总人数" width="80" />
-                  <el-table-column prop="normal" label="正常" width="80" />
-                  <el-table-column prop="late" label="迟到" width="80" />
-                  <el-table-column prop="earlyLeave" label="早退" width="80" />
-                  <el-table-column prop="absent" label="旷工" width="80" />
-                  <el-table-column prop="leave" label="请假" width="80" />
-                  <el-table-column label="出勤率" width="100">
+                <el-table
+                  :data="deptStatistics"
+                  style="width: 100%"
+                >
+                  <el-table-column
+                    prop="department"
+                    label="部门"
+                  />
+                  <el-table-column
+                    prop="total"
+                    label="总人数"
+                    width="80"
+                  />
+                  <el-table-column
+                    prop="normal"
+                    label="正常"
+                    width="80"
+                  />
+                  <el-table-column
+                    prop="late"
+                    label="迟到"
+                    width="80"
+                  />
+                  <el-table-column
+                    prop="earlyLeave"
+                    label="早退"
+                    width="80"
+                  />
+                  <el-table-column
+                    prop="absent"
+                    label="旷工"
+                    width="80"
+                  />
+                  <el-table-column
+                    prop="leave"
+                    label="请假"
+                    width="80"
+                  />
+                  <el-table-column
+                    label="出勤率"
+                    width="100"
+                  >
                     <template #default="{ row }">
                       {{ ((row.normal / row.total) * 100).toFixed(1) }}%
                     </template>
@@ -178,48 +383,135 @@
                     <span>员工考勤排名</span>
                   </div>
                 </template>
-                <el-table :data="employeeRanking" style="width: 100%">
-                  <el-table-column prop="rank" label="排名" width="80" />
-                  <el-table-column prop="name" label="姓名" width="100" />
-                  <el-table-column prop="department" label="部门" width="120" />
-                  <el-table-column prop="normalDays" label="正常天数" width="100" />
-                  <el-table-column prop="lateCount" label="迟到次数" width="100" />
-                  <el-table-column prop="absentCount" label="旷工次数" width="100" />
+                <el-table
+                  :data="employeeRanking"
+                  style="width: 100%"
+                >
+                  <el-table-column
+                    prop="rank"
+                    label="排名"
+                    width="80"
+                  />
+                  <el-table-column
+                    prop="name"
+                    label="姓名"
+                    width="100"
+                  />
+                  <el-table-column
+                    prop="department"
+                    label="部门"
+                    width="120"
+                  />
+                  <el-table-column
+                    prop="normalDays"
+                    label="正常天数"
+                    width="100"
+                  />
+                  <el-table-column
+                    prop="lateCount"
+                    label="迟到次数"
+                    width="100"
+                  />
+                  <el-table-column
+                    prop="absentCount"
+                    label="旷工次数"
+                    width="100"
+                  />
                 </el-table>
               </el-card>
             </el-col>
           </el-row>
         </el-tab-pane>
 
-        <el-tab-pane label="补卡申请" name="supplement">
+        <el-tab-pane
+          label="补卡申请"
+          name="supplement"
+        >
           <div class="table-actions">
-            <el-button type="primary" @click="handleCreate">
+            <el-button
+              type="primary"
+              @click="handleCreate"
+            >
               <el-icon><Plus /></el-icon>
               申请补卡
             </el-button>
           </div>
-          <el-table :data="supplementList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="employeeName" label="员工姓名" width="100" />
-            <el-table-column prop="department" label="部门" width="120" />
-            <el-table-column prop="date" label="日期" width="120" />
-            <el-table-column prop="type" label="补卡类型" width="100">
+          <el-table
+            v-loading="loading"
+            :data="supplementList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="employeeName"
+              label="员工姓名"
+              width="100"
+            />
+            <el-table-column
+              prop="department"
+              label="部门"
+              width="120"
+            />
+            <el-table-column
+              prop="date"
+              label="日期"
+              width="120"
+            />
+            <el-table-column
+              prop="type"
+              label="补卡类型"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag size="small">{{ row.type === 'check_in' ? '签到' : '签退' }}</el-tag>
+                <el-tag size="small">
+                  {{ row.type === 'check_in' ? '签到' : '签退' }}
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="reason" label="补卡原因" show-overflow-tooltip />
-            <el-table-column prop="applyTime" label="申请时间" width="180" />
-            <el-table-column prop="status" label="状态" width="100">
+            <el-table-column
+              prop="reason"
+              label="补卡原因"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="applyTime"
+              label="申请时间"
+              width="180"
+            />
+            <el-table-column
+              prop="status"
+              label="状态"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getApplicationStatusType(row.status)" size="small">
+                <el-tag
+                  :type="getApplicationStatusType(row.status)"
+                  size="small"
+                >
                   {{ getApplicationStatusText(row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right">
+            <el-table-column
+              label="操作"
+              width="150"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
-                <el-button type="danger" link @click="handleDelete(row)" v-if="row.status === 'pending'">删除</el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleDetail(row)"
+                >
+                  详情
+                </el-button>
+                <el-button
+                  v-if="row.status === 'pending'"
+                  type="danger"
+                  link
+                  @click="handleDelete(row)"
+                >
+                  删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -230,9 +522,9 @@
             :page-sizes="[10, 20, 50, 100]"
             :total="pagination.total"
             layout="total, sizes, prev, pager, next, jumper"
+            class="mt-20"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            class="mt-20"
           />
         </el-tab-pane>
       </el-tabs>
@@ -250,7 +542,10 @@
         :rules="formRules"
         label-width="100px"
       >
-        <el-form-item label="补卡日期" prop="date">
+        <el-form-item
+          label="补卡日期"
+          prop="date"
+        >
           <el-date-picker
             v-model="formData.date"
             type="date"
@@ -260,14 +555,24 @@
           />
         </el-form-item>
 
-        <el-form-item label="补卡类型" prop="type">
+        <el-form-item
+          label="补卡类型"
+          prop="type"
+        >
           <el-radio-group v-model="formData.type">
-            <el-radio label="check_in">签到</el-radio>
-            <el-radio label="check_out">签退</el-radio>
+            <el-radio label="check_in">
+              签到
+            </el-radio>
+            <el-radio label="check_out">
+              签退
+            </el-radio>
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item label="补卡时间" prop="time">
+        <el-form-item
+          label="补卡时间"
+          prop="time"
+        >
           <el-time-picker
             v-model="formData.time"
             placeholder="选择时间"
@@ -276,8 +581,16 @@
           />
         </el-form-item>
 
-        <el-form-item label="补卡原因" prop="reason">
-          <el-input v-model="formData.reason" type="textarea" :rows="3" placeholder="请输入补卡原因" />
+        <el-form-item
+          label="补卡原因"
+          prop="reason"
+        >
+          <el-input
+            v-model="formData.reason"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入补卡原因"
+          />
         </el-form-item>
 
         <el-form-item label="附件">
@@ -287,14 +600,23 @@
             :auto-upload="false"
             multiple
           >
-            <el-button type="primary">上传附件</el-button>
+            <el-button type="primary">
+              上传附件
+            </el-button>
           </el-upload>
         </el-form-item>
       </el-form>
 
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">提交</el-button>
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleSubmit"
+        >
+          提交
+        </el-button>
       </template>
     </el-dialog>
 
@@ -303,19 +625,38 @@
       title="考勤详情"
       width="600px"
     >
-      <div class="attendance-detail" v-if="currentRecord">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="员工姓名">{{ currentRecord.employeeName }}</el-descriptions-item>
-          <el-descriptions-item label="部门">{{ currentRecord.department }}</el-descriptions-item>
-          <el-descriptions-item label="日期">{{ currentRecord.date }}</el-descriptions-item>
-          <el-descriptions-item label="签到时间">{{ currentRecord.checkInTime || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="签退时间">{{ currentRecord.checkOutTime || '-' }}</el-descriptions-item>
+      <div
+        v-if="currentRecord"
+        class="attendance-detail"
+      >
+        <el-descriptions
+          :column="2"
+          border
+        >
+          <el-descriptions-item label="员工姓名">
+            {{ currentRecord.employeeName }}
+          </el-descriptions-item>
+          <el-descriptions-item label="部门">
+            {{ currentRecord.department }}
+          </el-descriptions-item>
+          <el-descriptions-item label="日期">
+            {{ currentRecord.date }}
+          </el-descriptions-item>
+          <el-descriptions-item label="签到时间">
+            {{ currentRecord.checkInTime || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="签退时间">
+            {{ currentRecord.checkOutTime || '-' }}
+          </el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="getStatusType(currentRecord.status)">
               {{ getStatusText(currentRecord.status) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="请假类型" :span="2">
+          <el-descriptions-item
+            label="请假类型"
+            :span="2"
+          >
             {{ currentRecord.leaveType || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="异常标记">
@@ -326,7 +667,9 @@
         </el-descriptions>
       </div>
       <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
+        <el-button @click="detailVisible = false">
+          关闭
+        </el-button>
       </template>
     </el-dialog>
   </div>

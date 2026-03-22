@@ -6,7 +6,11 @@
           <template #header>
             <div class="card-header">
               <span>文档分类</span>
-              <el-button type="primary" link @click="handleAddFolder">
+              <el-button
+                type="primary"
+                link
+                @click="handleAddFolder"
+              >
                 <el-icon><Plus /></el-icon>
               </el-button>
             </div>
@@ -30,12 +34,24 @@
 
       <el-col :span="20">
         <el-card>
-          <el-form :inline="true" :model="queryForm" class="query-form">
+          <el-form
+            :inline="true"
+            :model="queryForm"
+            class="query-form"
+          >
             <el-form-item label="文件名">
-              <el-input v-model="queryForm.name" placeholder="请输入文件名" clearable />
+              <el-input
+                v-model="queryForm.name"
+                placeholder="请输入文件名"
+                clearable
+              />
             </el-form-item>
             <el-form-item label="上传人">
-              <el-input v-model="queryForm.uploader" placeholder="请输入上传人" clearable />
+              <el-input
+                v-model="queryForm.uploader"
+                placeholder="请输入上传人"
+                clearable
+              />
             </el-form-item>
             <el-form-item label="上传时间">
               <el-date-picker
@@ -47,13 +63,23 @@
               />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="handleQuery">查询</el-button>
-              <el-button @click="handleReset">重置</el-button>
+              <el-button
+                type="primary"
+                @click="handleQuery"
+              >
+                查询
+              </el-button>
+              <el-button @click="handleReset">
+                重置
+              </el-button>
             </el-form-item>
           </el-form>
 
           <div class="table-actions">
-            <el-button type="primary" @click="handleUpload">
+            <el-button
+              type="primary"
+              @click="handleUpload"
+            >
               <el-icon><Upload /></el-icon>
               上传文档
             </el-button>
@@ -63,40 +89,113 @@
             </el-button>
           </div>
 
-          <el-table :data="tableData" style="width: 100%" v-loading="loading">
-            <el-table-column prop="name" label="文件名" show-overflow-tooltip>
+          <el-table
+            v-loading="loading"
+            :data="tableData"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="name"
+              label="文件名"
+              show-overflow-tooltip
+            >
               <template #default="{ row }">
-                <el-icon class="mr-10"><Document /></el-icon>
+                <el-icon class="mr-10">
+                  <Document />
+                </el-icon>
                 {{ row.name }}
               </template>
             </el-table-column>
-            <el-table-column prop="type" label="类型" width="100">
+            <el-table-column
+              prop="type"
+              label="类型"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag size="small">{{ getTypeText(row.type) }}</el-tag>
+                <el-tag size="small">
+                  {{ getTypeText(row.type) }}
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="version" label="版本" width="80" />
-            <el-table-column prop="uploader" label="上传人" width="100" />
-            <el-table-column prop="uploadTime" label="上传时间" width="180" />
-            <el-table-column prop="size" label="大小" width="100">
+            <el-table-column
+              prop="version"
+              label="版本"
+              width="80"
+            />
+            <el-table-column
+              prop="uploader"
+              label="上传人"
+              width="100"
+            />
+            <el-table-column
+              prop="uploadTime"
+              label="上传时间"
+              width="180"
+            />
+            <el-table-column
+              prop="size"
+              label="大小"
+              width="100"
+            >
               <template #default="{ row }">
                 {{ formatFileSize(row.size) }}
               </template>
             </el-table-column>
-            <el-table-column prop="permissions" label="权限" width="100">
+            <el-table-column
+              prop="permissions"
+              label="权限"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getPermissionType(row.permissions)" size="small">
+                <el-tag
+                  :type="getPermissionType(row.permissions)"
+                  size="small"
+                >
                   {{ getPermissionText(row.permissions) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="300" fixed="right">
+            <el-table-column
+              label="操作"
+              width="300"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handlePreview(row)">预览</el-button>
-                <el-button type="primary" link @click="handleDownload(row)">下载</el-button>
-                <el-button type="primary" link @click="handleVersion(row)">版本</el-button>
-                <el-button type="primary" link @click="handlePermission(row)">权限</el-button>
-                <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handlePreview(row)"
+                >
+                  预览
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleDownload(row)"
+                >
+                  下载
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleVersion(row)"
+                >
+                  版本
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handlePermission(row)"
+                >
+                  权限
+                </el-button>
+                <el-button
+                  type="danger"
+                  link
+                  @click="handleDelete(row)"
+                >
+                  删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -107,9 +206,9 @@
             :page-sizes="[10, 20, 50, 100]"
             :total="pagination.total"
             layout="total, sizes, prev, pager, next, jumper"
+            class="mt-20"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            class="mt-20"
           />
         </el-card>
       </el-col>
@@ -120,7 +219,10 @@
       title="上传文档"
       width="600px"
     >
-      <el-form :model="uploadForm" label-width="100px">
+      <el-form
+        :model="uploadForm"
+        label-width="100px"
+      >
         <el-form-item label="选择文件">
           <el-upload
             v-model:file-list="uploadFileList"
@@ -129,30 +231,57 @@
             multiple
             drag
           >
-            <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+            <el-icon class="el-icon--upload">
+              <UploadFilled />
+            </el-icon>
             <div class="el-upload__text">
               将文件拖到此处，或<em>点击上传</em>
             </div>
           </el-upload>
         </el-form-item>
         <el-form-item label="文档类型">
-          <el-select v-model="uploadForm.type" placeholder="请选择文档类型">
-            <el-option label="制度" value="system" />
-            <el-option label="流程" value="process" />
-            <el-option label="资料" value="material" />
+          <el-select
+            v-model="uploadForm.type"
+            placeholder="请选择文档类型"
+          >
+            <el-option
+              label="制度"
+              value="system"
+            />
+            <el-option
+              label="流程"
+              value="process"
+            />
+            <el-option
+              label="资料"
+              value="material"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="权限设置">
           <el-radio-group v-model="uploadForm.permissions">
-            <el-radio label="view">仅查看</el-radio>
-            <el-radio label="edit">可编辑</el-radio>
-            <el-radio label="download">可下载</el-radio>
+            <el-radio label="view">
+              仅查看
+            </el-radio>
+            <el-radio label="edit">
+              可编辑
+            </el-radio>
+            <el-radio label="download">
+              可下载
+            </el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="uploadVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleUploadSubmit">上传</el-button>
+        <el-button @click="uploadVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleUploadSubmit"
+        >
+          上传
+        </el-button>
       </template>
     </el-dialog>
 
@@ -161,18 +290,44 @@
       title="版本管理"
       width="800px"
     >
-      <el-table :data="currentDocument?.versions" style="width: 100%">
-        <el-table-column prop="version" label="版本号" width="100" />
-        <el-table-column prop="uploadTime" label="上传时间" width="180" />
-        <el-table-column prop="uploader" label="上传人" width="120" />
-        <el-table-column label="操作" width="150">
+      <el-table
+        :data="currentDocument?.versions"
+        style="width: 100%"
+      >
+        <el-table-column
+          prop="version"
+          label="版本号"
+          width="100"
+        />
+        <el-table-column
+          prop="uploadTime"
+          label="上传时间"
+          width="180"
+        />
+        <el-table-column
+          prop="uploader"
+          label="上传人"
+          width="120"
+        />
+        <el-table-column
+          label="操作"
+          width="150"
+        >
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleRollback(row)">回滚</el-button>
+            <el-button
+              type="primary"
+              link
+              @click="handleRollback(row)"
+            >
+              回滚
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
       <template #footer>
-        <el-button @click="versionVisible = false">关闭</el-button>
+        <el-button @click="versionVisible = false">
+          关闭
+        </el-button>
       </template>
     </el-dialog>
 
@@ -181,18 +336,34 @@
       title="权限设置"
       width="500px"
     >
-      <el-form :model="permissionForm" label-width="100px">
+      <el-form
+        :model="permissionForm"
+        label-width="100px"
+      >
         <el-form-item label="权限类型">
           <el-radio-group v-model="permissionForm.permissions">
-            <el-radio label="view">仅查看</el-radio>
-            <el-radio label="edit">可编辑</el-radio>
-            <el-radio label="download">可下载</el-radio>
+            <el-radio label="view">
+              仅查看
+            </el-radio>
+            <el-radio label="edit">
+              可编辑
+            </el-radio>
+            <el-radio label="download">
+              可下载
+            </el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="permissionVisible = false">取消</el-button>
-        <el-button type="primary" @click="handlePermissionSubmit">确定</el-button>
+        <el-button @click="permissionVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handlePermissionSubmit"
+        >
+          确定
+        </el-button>
       </template>
     </el-dialog>
   </div>

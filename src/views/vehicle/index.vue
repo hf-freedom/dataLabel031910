@@ -1,83 +1,254 @@
 <template>
   <div class="page-container">
     <el-card>
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="车辆列表" name="vehicle">
-          <el-table :data="vehicleList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="plateNumber" label="车牌号" width="120" />
-            <el-table-column prop="model" label="车型" width="150" />
-            <el-table-column prop="driver" label="司机" width="100" />
-            <el-table-column prop="driverPhone" label="司机电话" width="130" />
-            <el-table-column prop="mileage" label="里程(km)" width="100" />
-            <el-table-column prop="lastMaintenance" label="上次保养" width="120" />
-            <el-table-column prop="status" label="状态" width="100">
+      <el-tabs
+        v-model="activeTab"
+        @tab-change="handleTabChange"
+      >
+        <el-tab-pane
+          label="车辆列表"
+          name="vehicle"
+        >
+          <el-table
+            v-loading="loading"
+            :data="vehicleList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="plateNumber"
+              label="车牌号"
+              width="120"
+            />
+            <el-table-column
+              prop="model"
+              label="车型"
+              width="150"
+            />
+            <el-table-column
+              prop="driver"
+              label="司机"
+              width="100"
+            />
+            <el-table-column
+              prop="driverPhone"
+              label="司机电话"
+              width="130"
+            />
+            <el-table-column
+              prop="mileage"
+              label="里程(km)"
+              width="100"
+            />
+            <el-table-column
+              prop="lastMaintenance"
+              label="上次保养"
+              width="120"
+            />
+            <el-table-column
+              prop="status"
+              label="状态"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)" size="small">
+                <el-tag
+                  :type="getStatusType(row.status)"
+                  size="small"
+                >
                   {{ getStatusText(row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right">
+            <el-table-column
+              label="操作"
+              width="150"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleVehicleDetail(row)">详情</el-button>
-                <el-button type="primary" link @click="handleMaintenance(row)">保养</el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleVehicleDetail(row)"
+                >
+                  详情
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleMaintenance(row)"
+                >
+                  保养
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
 
-        <el-tab-pane label="用车申请" name="application">
+        <el-tab-pane
+          label="用车申请"
+          name="application"
+        >
           <div class="table-actions">
-            <el-button type="primary" @click="handleCreateApplication">
+            <el-button
+              type="primary"
+              @click="handleCreateApplication"
+            >
               <el-icon><Plus /></el-icon>
               申请用车
             </el-button>
           </div>
-          <el-table :data="applicationList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="applicant" label="申请人" width="100" />
-            <el-table-column prop="department" label="部门" width="120" />
-            <el-table-column prop="useTime" label="用车时间" width="180" />
-            <el-table-column prop="returnTime" label="归还时间" width="180" />
-            <el-table-column prop="destination" label="目的地" width="150" show-overflow-tooltip />
-            <el-table-column prop="status" label="状态" width="100">
+          <el-table
+            v-loading="loading"
+            :data="applicationList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="applicant"
+              label="申请人"
+              width="100"
+            />
+            <el-table-column
+              prop="department"
+              label="部门"
+              width="120"
+            />
+            <el-table-column
+              prop="useTime"
+              label="用车时间"
+              width="180"
+            />
+            <el-table-column
+              prop="returnTime"
+              label="归还时间"
+              width="180"
+            />
+            <el-table-column
+              prop="destination"
+              label="目的地"
+              width="150"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="status"
+              label="状态"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getApplicationStatusType(row.status)" size="small">
+                <el-tag
+                  :type="getApplicationStatusType(row.status)"
+                  size="small"
+                >
                   {{ getApplicationStatusText(row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="200" fixed="right">
+            <el-table-column
+              label="操作"
+              width="200"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleApplicationDetail(row)">详情</el-button>
-                <el-button type="warning" link @click="handleWithdraw(row)" v-if="row.status === 'pending'">撤回</el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleApplicationDetail(row)"
+                >
+                  详情
+                </el-button>
+                <el-button
+                  v-if="row.status === 'pending'"
+                  type="warning"
+                  link
+                  @click="handleWithdraw(row)"
+                >
+                  撤回
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
 
-        <el-tab-pane label="调度管理" name="dispatch">
-          <el-table :data="pendingDispatchList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="applicant" label="申请人" width="100" />
-            <el-table-column prop="department" label="部门" width="120" />
-            <el-table-column prop="useTime" label="用车时间" width="180" />
-            <el-table-column prop="destination" label="目的地" width="150" show-overflow-tooltip />
-            <el-table-column prop="requiredModel" label="要求车型" width="120" />
-            <el-table-column label="操作" width="200" fixed="right">
+        <el-tab-pane
+          label="调度管理"
+          name="dispatch"
+        >
+          <el-table
+            v-loading="loading"
+            :data="pendingDispatchList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="applicant"
+              label="申请人"
+              width="100"
+            />
+            <el-table-column
+              prop="department"
+              label="部门"
+              width="120"
+            />
+            <el-table-column
+              prop="useTime"
+              label="用车时间"
+              width="180"
+            />
+            <el-table-column
+              prop="destination"
+              label="目的地"
+              width="150"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="requiredModel"
+              label="要求车型"
+              width="120"
+            />
+            <el-table-column
+              label="操作"
+              width="200"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleDispatch(row)">调度</el-button>
-                <el-button type="primary" link @click="handleApplicationDetail(row)">详情</el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleDispatch(row)"
+                >
+                  调度
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleApplicationDetail(row)"
+                >
+                  详情
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
 
-        <el-tab-pane label="用车记录" name="record">
-          <el-form :inline="true" :model="queryForm" class="query-form">
+        <el-tab-pane
+          label="用车记录"
+          name="record"
+        >
+          <el-form
+            :inline="true"
+            :model="queryForm"
+            class="query-form"
+          >
             <el-form-item label="申请人">
-              <el-input v-model="queryForm.applicant" placeholder="请输入申请人" clearable />
+              <el-input
+                v-model="queryForm.applicant"
+                placeholder="请输入申请人"
+                clearable
+              />
             </el-form-item>
             <el-form-item label="车牌号">
-              <el-input v-model="queryForm.plateNumber" placeholder="请输入车牌号" clearable />
+              <el-input
+                v-model="queryForm.plateNumber"
+                placeholder="请输入车牌号"
+                clearable
+              />
             </el-form-item>
             <el-form-item label="时间范围">
               <el-date-picker
@@ -89,21 +260,67 @@
               />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="handleQuery">查询</el-button>
-              <el-button @click="handleReset">重置</el-button>
+              <el-button
+                type="primary"
+                @click="handleQuery"
+              >
+                查询
+              </el-button>
+              <el-button @click="handleReset">
+                重置
+              </el-button>
             </el-form-item>
           </el-form>
-          <el-table :data="recordList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="applicant" label="申请人" width="100" />
-            <el-table-column prop="assignedVehicle" label="车辆" width="120" />
-            <el-table-column prop="assignedDriver" label="司机" width="100" />
-            <el-table-column prop="useTime" label="用车时间" width="180" />
-            <el-table-column prop="returnTime" label="归还时间" width="180" />
-            <el-table-column prop="mileage" label="里程(km)" width="100" />
-            <el-table-column prop="cost" label="费用(元)" width="100" />
-            <el-table-column prop="status" label="状态" width="100">
+          <el-table
+            v-loading="loading"
+            :data="recordList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="applicant"
+              label="申请人"
+              width="100"
+            />
+            <el-table-column
+              prop="assignedVehicle"
+              label="车辆"
+              width="120"
+            />
+            <el-table-column
+              prop="assignedDriver"
+              label="司机"
+              width="100"
+            />
+            <el-table-column
+              prop="useTime"
+              label="用车时间"
+              width="180"
+            />
+            <el-table-column
+              prop="returnTime"
+              label="归还时间"
+              width="180"
+            />
+            <el-table-column
+              prop="mileage"
+              label="里程(km)"
+              width="100"
+            />
+            <el-table-column
+              prop="cost"
+              label="费用(元)"
+              width="100"
+            />
+            <el-table-column
+              prop="status"
+              label="状态"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getApplicationStatusType(row.status)" size="small">
+                <el-tag
+                  :type="getApplicationStatusType(row.status)"
+                  size="small"
+                >
                   {{ getApplicationStatusText(row.status) }}
                 </el-tag>
               </template>
@@ -118,9 +335,9 @@
         :page-sizes="[10, 20, 50, 100]"
         :total="pagination.total"
         layout="total, sizes, prev, pager, next, jumper"
+        class="mt-20"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-        class="mt-20"
       />
     </el-card>
 
@@ -136,7 +353,10 @@
         :rules="applicationRules"
         label-width="100px"
       >
-        <el-form-item label="用车时间" prop="useTime">
+        <el-form-item
+          label="用车时间"
+          prop="useTime"
+        >
           <el-date-picker
             v-model="applicationForm.useTime"
             type="datetime"
@@ -145,7 +365,10 @@
           />
         </el-form-item>
 
-        <el-form-item label="归还时间" prop="returnTime">
+        <el-form-item
+          label="归还时间"
+          prop="returnTime"
+        >
           <el-date-picker
             v-model="applicationForm.returnTime"
             type="datetime"
@@ -154,25 +377,58 @@
           />
         </el-form-item>
 
-        <el-form-item label="目的地" prop="destination">
-          <el-input v-model="applicationForm.destination" placeholder="请输入目的地" />
+        <el-form-item
+          label="目的地"
+          prop="destination"
+        >
+          <el-input
+            v-model="applicationForm.destination"
+            placeholder="请输入目的地"
+          />
         </el-form-item>
 
-        <el-form-item label="用车事由" prop="reason">
-          <el-input v-model="applicationForm.reason" type="textarea" :rows="3" placeholder="请输入用车事由" />
+        <el-form-item
+          label="用车事由"
+          prop="reason"
+        >
+          <el-input
+            v-model="applicationForm.reason"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入用车事由"
+          />
         </el-form-item>
 
         <el-form-item label="要求车型">
-          <el-select v-model="applicationForm.requiredModel" placeholder="请选择车型（可选）">
-            <el-option label="轿车" value="轿车" />
-            <el-option label="SUV" value="SUV" />
-            <el-option label="商务车" value="商务车" />
+          <el-select
+            v-model="applicationForm.requiredModel"
+            placeholder="请选择车型（可选）"
+          >
+            <el-option
+              label="轿车"
+              value="轿车"
+            />
+            <el-option
+              label="SUV"
+              value="SUV"
+            />
+            <el-option
+              label="商务车"
+              value="商务车"
+            />
           </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="applicationVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleApplicationSubmit">提交</el-button>
+        <el-button @click="applicationVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleApplicationSubmit"
+        >
+          提交
+        </el-button>
       </template>
     </el-dialog>
 
@@ -181,9 +437,15 @@
       title="车辆调度"
       width="600px"
     >
-      <el-form :model="dispatchForm" label-width="100px">
+      <el-form
+        :model="dispatchForm"
+        label-width="100px"
+      >
         <el-form-item label="选择车辆">
-          <el-select v-model="dispatchForm.vehicleId" placeholder="请选择车辆">
+          <el-select
+            v-model="dispatchForm.vehicleId"
+            placeholder="请选择车辆"
+          >
             <el-option
               v-for="vehicle in availableVehicles"
               :key="vehicle.id"
@@ -194,20 +456,44 @@
         </el-form-item>
 
         <el-form-item label="指派司机">
-          <el-select v-model="dispatchForm.driver" placeholder="请选择司机">
-            <el-option label="张师傅" value="张师傅" />
-            <el-option label="李师傅" value="李师傅" />
-            <el-option label="王师傅" value="王师傅" />
+          <el-select
+            v-model="dispatchForm.driver"
+            placeholder="请选择司机"
+          >
+            <el-option
+              label="张师傅"
+              value="张师傅"
+            />
+            <el-option
+              label="李师傅"
+              value="李师傅"
+            />
+            <el-option
+              label="王师傅"
+              value="王师傅"
+            />
           </el-select>
         </el-form-item>
 
         <el-form-item label="调度备注">
-          <el-input v-model="dispatchForm.remark" type="textarea" :rows="3" placeholder="请输入调度备注" />
+          <el-input
+            v-model="dispatchForm.remark"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入调度备注"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dispatchVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleDispatchSubmit">确定</el-button>
+        <el-button @click="dispatchVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleDispatchSubmit"
+        >
+          确定
+        </el-button>
       </template>
     </el-dialog>
 
@@ -216,16 +502,41 @@
       title="用车详情"
       width="700px"
     >
-      <div class="application-detail" v-if="currentApplication">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="申请人">{{ currentApplication.applicant }}</el-descriptions-item>
-          <el-descriptions-item label="部门">{{ currentApplication.department }}</el-descriptions-item>
-          <el-descriptions-item label="用车时间">{{ currentApplication.useTime }}</el-descriptions-item>
-          <el-descriptions-item label="归还时间">{{ currentApplication.returnTime }}</el-descriptions-item>
-          <el-descriptions-item label="目的地">{{ currentApplication.destination }}</el-descriptions-item>
-          <el-descriptions-item label="用车事由" :span="2">{{ currentApplication.reason }}</el-descriptions-item>
-          <el-descriptions-item label="分配车辆">{{ currentApplication.assignedVehicle || '未分配' }}</el-descriptions-item>
-          <el-descriptions-item label="分配司机">{{ currentApplication.assignedDriver || '未分配' }}</el-descriptions-item>
+      <div
+        v-if="currentApplication"
+        class="application-detail"
+      >
+        <el-descriptions
+          :column="2"
+          border
+        >
+          <el-descriptions-item label="申请人">
+            {{ currentApplication.applicant }}
+          </el-descriptions-item>
+          <el-descriptions-item label="部门">
+            {{ currentApplication.department }}
+          </el-descriptions-item>
+          <el-descriptions-item label="用车时间">
+            {{ currentApplication.useTime }}
+          </el-descriptions-item>
+          <el-descriptions-item label="归还时间">
+            {{ currentApplication.returnTime }}
+          </el-descriptions-item>
+          <el-descriptions-item label="目的地">
+            {{ currentApplication.destination }}
+          </el-descriptions-item>
+          <el-descriptions-item
+            label="用车事由"
+            :span="2"
+          >
+            {{ currentApplication.reason }}
+          </el-descriptions-item>
+          <el-descriptions-item label="分配车辆">
+            {{ currentApplication.assignedVehicle || '未分配' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="分配司机">
+            {{ currentApplication.assignedDriver || '未分配' }}
+          </el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="getApplicationStatusType(currentApplication.status)">
               {{ getApplicationStatusText(currentApplication.status) }}
@@ -234,7 +545,9 @@
         </el-descriptions>
       </div>
       <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
+        <el-button @click="detailVisible = false">
+          关闭
+        </el-button>
       </template>
     </el-dialog>
   </div>

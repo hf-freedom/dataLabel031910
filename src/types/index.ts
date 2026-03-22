@@ -1,3 +1,13 @@
+export * from './api'
+export * from './announcement'
+export * from './document'
+export * from './approval'
+export * from './meeting'
+export * from './vehicle'
+export * from './contact'
+export * from './task'
+export * from './attendance'
+
 export interface Announcement {
   id: string
   title: string
@@ -101,7 +111,10 @@ export interface Contact {
   position?: string
   type: 'internal' | 'external'
   category?: string
+  company?: string
   isFavorite?: boolean
+  address?: string
+  remark?: string
 }
 
 export interface Task {

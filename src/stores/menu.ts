@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 export interface MenuItem {
   id: string
@@ -7,6 +7,8 @@ export interface MenuItem {
   icon: string
   path: string
   children?: MenuItem[]
+  badge?: number | string
+  hidden?: boolean
 }
 
 export const useMenuStore = defineStore('menu', () => {
@@ -68,14 +70,65 @@ export const useMenuStore = defineStore('menu', () => {
   ])
 
   const activeMenu = ref<string>('/dashboard')
+  const collapsed = ref(false)
+
+  const visibleMenuList = computed(() => {
+    return menuList.value.filter(item => !item.hidden)
+  })
 
   const setActiveMenu = (path: string) => {
     activeMenu.value = path
   }
 
+  const toggleCollapsed = () => {
+    collapsed.value = !collapsed.value
+  }
+
+  const setCollapsed = (value: boolean) => {
+    collapsed.value = value
+  }
+
+  const updateMenuBadge = (path: string, badge: number | string) => {
+    const updateBadge = (items: MenuItem[]): boolean => {
+      for (const item of items) {
+        if (item.path === path) {
+          item.badge = badge
+          return true
+        }
+        if (item.children && updateBadge(item.children)) {
+          return true
+        }
+      }
+      return false
+    }
+    updateBadge(menuList.value)
+  }
+
+  const findMenuItem = (path: string): MenuItem | undefined => {
+    const find = (items: MenuItem[]): MenuItem | undefined => {
+      for (const item of items) {
+        if (item.path === path) {
+          return item
+        }
+        if (item.children) {
+          const found = find(item.children)
+          if (found) return found
+        }
+      }
+      return undefined
+    }
+    return find(menuList.value)
+  }
+
   return {
     menuList,
     activeMenu,
-    setActiveMenu
+    collapsed,
+    visibleMenuList,
+    setActiveMenu,
+    toggleCollapsed,
+    setCollapsed,
+    updateMenuBadge,
+    findMenuItem
   }
 })

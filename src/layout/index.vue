@@ -1,8 +1,13 @@
 <template>
   <el-container class="layout-container">
-    <el-aside width="240px" class="aside">
+    <el-aside
+      width="240px"
+      class="aside"
+    >
       <div class="logo">
-        <el-icon :size="28"><OfficeBuilding /></el-icon>
+        <el-icon :size="28">
+          <OfficeBuilding />
+        </el-icon>
         <span>办公自动化</span>
       </div>
       <el-menu
@@ -19,7 +24,9 @@
           :index="item.path"
         >
           <el-icon><component :is="item.icon" /></el-icon>
-          <template #title>{{ item.title }}</template>
+          <template #title>
+            {{ item.title }}
+          </template>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -34,15 +41,27 @@
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <div class="user-info">
-              <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+              <el-avatar
+                :size="32"
+                src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
+              />
               <span class="username">{{ userStore.userInfo?.name || '管理员' }}</span>
               <el-icon><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                <el-dropdown-item command="settings">系统设置</el-dropdown-item>
-                <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+                <el-dropdown-item command="profile">
+                  个人中心
+                </el-dropdown-item>
+                <el-dropdown-item command="settings">
+                  系统设置
+                </el-dropdown-item>
+                <el-dropdown-item
+                  divided
+                  command="logout"
+                >
+                  退出登录
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>

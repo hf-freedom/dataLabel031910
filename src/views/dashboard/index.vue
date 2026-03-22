@@ -1,42 +1,81 @@
 <template>
   <div class="page-container">
     <el-row :gutter="20">
-      <el-col :span="6" v-for="(item, index) in statistics" :key="index">
+      <el-col
+        v-for="(item, index) in statistics"
+        :key="index"
+        :span="6"
+      >
         <el-card class="stat-card">
           <div class="stat-content">
-            <div class="stat-icon" :style="{ background: item.color }">
-              <el-icon :size="32" color="#fff">
+            <div
+              class="stat-icon"
+              :style="{ background: item.color }"
+            >
+              <el-icon
+                :size="32"
+                color="#fff"
+              >
                 <component :is="item.icon" />
               </el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-value">{{ item.value }}</div>
-              <div class="stat-label">{{ item.label }}</div>
+              <div class="stat-value">
+                {{ item.value }}
+              </div>
+              <div class="stat-label">
+                {{ item.label }}
+              </div>
             </div>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" class="mt-20">
+    <el-row
+      :gutter="20"
+      class="mt-20"
+    >
       <el-col :span="12">
         <el-card>
           <template #header>
             <div class="card-header">
               <span>待办事项</span>
-              <el-button type="primary" link>查看全部</el-button>
+              <el-button
+                type="primary"
+                link
+              >
+                查看全部
+              </el-button>
             </div>
           </template>
-          <el-table :data="todoList" style="width: 100%">
-            <el-table-column prop="title" label="事项" />
-            <el-table-column prop="type" label="类型" width="100">
+          <el-table
+            :data="todoList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="title"
+              label="事项"
+            />
+            <el-table-column
+              prop="type"
+              label="类型"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="row.type === 'urgent' ? 'danger' : 'primary'" size="small">
+                <el-tag
+                  :type="row.type === 'urgent' ? 'danger' : 'primary'"
+                  size="small"
+                >
                   {{ row.type === 'urgent' ? '紧急' : '普通' }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="time" label="时间" width="180" />
+            <el-table-column
+              prop="time"
+              label="时间"
+              width="180"
+            />
           </el-table>
         </el-card>
       </el-col>
@@ -46,19 +85,42 @@
           <template #header>
             <div class="card-header">
               <span>最新公告</span>
-              <el-button type="primary" link>查看全部</el-button>
+              <el-button
+                type="primary"
+                link
+              >
+                查看全部
+              </el-button>
             </div>
           </template>
-          <el-table :data="announcementList" style="width: 100%">
-            <el-table-column prop="title" label="标题" show-overflow-tooltip />
-            <el-table-column prop="publisher" label="发布人" width="100" />
-            <el-table-column prop="time" label="时间" width="180" />
+          <el-table
+            :data="announcementList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="title"
+              label="标题"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="publisher"
+              label="发布人"
+              width="100"
+            />
+            <el-table-column
+              prop="time"
+              label="时间"
+              width="180"
+            />
           </el-table>
         </el-card>
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" class="mt-20">
+    <el-row
+      :gutter="20"
+      class="mt-20"
+    >
       <el-col :span="24">
         <el-card>
           <template #header>
@@ -73,7 +135,10 @@
               class="action-item"
               @click="handleQuickAction(action.path)"
             >
-              <el-icon :size="40" :color="action.color">
+              <el-icon
+                :size="40"
+                :color="action.color"
+              >
                 <component :is="action.icon" />
               </el-icon>
               <span>{{ action.label }}</span>
