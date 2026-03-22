@@ -1,19 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-export interface UserInfo {
-  id: string
-  name: string
-  email: string
-  phone: string
-  department: string
-  position: string
-  avatar?: string
-}
+import type { UserInfo } from '@/types'
+import { userApi } from '@/api/user'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref<string>(localStorage.getItem('token') || '')
   const userInfo = ref<UserInfo | null>(null)
+  const loading = ref(false)
 
   const isLogin = computed(() => !!token.value)
 
@@ -32,12 +25,27 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('token')
   }
 
+  const fetchUserInfo = async () => {
+    if (!token.value) return
+    loading.value = true
+    try {
+      const info = await userApi.getUserInfo()
+      userInfo.value = info
+    } catch (error) {
+      console.error('Failed to fetch user info:', error)
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     token,
     userInfo,
+    loading,
     isLogin,
     setToken,
     setUserInfo,
-    logout
+    logout,
+    fetchUserInfo
   }
 })

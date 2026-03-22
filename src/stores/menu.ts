@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 export interface MenuItem {
   id: string
@@ -68,14 +69,27 @@ export const useMenuStore = defineStore('menu', () => {
   ])
 
   const activeMenu = ref<string>('/dashboard')
+  const collapsed = ref(false)
 
   const setActiveMenu = (path: string) => {
     activeMenu.value = path
   }
 
+  const toggleCollapsed = () => {
+    collapsed.value = !collapsed.value
+  }
+
+  const currentMenu = computed(() => {
+    const route = useRoute()
+    return menuList.value.find(item => item.path === route.path)
+  })
+
   return {
     menuList,
     activeMenu,
-    setActiveMenu
+    collapsed,
+    currentMenu,
+    setActiveMenu,
+    toggleCollapsed
   }
 })
