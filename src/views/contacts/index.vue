@@ -29,18 +29,14 @@
             </el-col>
 
             <el-col :span="18">
-              <el-form :inline="true" :model="queryForm" class="query-form">
+              <QueryForm :model="queryForm" @query="handleQuery" @reset="handleReset">
                 <el-form-item label="姓名">
                   <el-input v-model="queryForm.name" placeholder="请输入姓名" clearable />
                 </el-form-item>
                 <el-form-item label="职位">
                   <el-input v-model="queryForm.position" placeholder="请输入职位" clearable />
                 </el-form-item>
-                <el-form-item>
-                  <el-button type="primary" @click="handleQuery">查询</el-button>
-                  <el-button @click="handleReset">重置</el-button>
-                </el-form-item>
-              </el-form>
+              </QueryForm>
 
               <el-table :data="internalList" style="width: 100%" v-loading="loading">
                 <el-table-column prop="name" label="姓名" width="100" />
@@ -57,22 +53,18 @@
                 </el-table-column>
               </el-table>
 
-              <el-pagination
-                v-model:current-page="pagination.page"
-                v-model:page-size="pagination.pageSize"
-                :page-sizes="[10, 20, 50, 100]"
+              <Pagination
+                v-model:page="pagination.page"
+                v-model:pageSize="pagination.pageSize"
                 :total="pagination.total"
-                layout="total, sizes, prev, pager, next, jumper"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                class="mt-20"
+                @change="handlePageChange"
               />
             </el-col>
           </el-row>
         </el-tab-pane>
 
         <el-tab-pane label="外部联系人" name="external">
-          <el-form :inline="true" :model="queryForm" class="query-form">
+          <QueryForm :model="queryForm" @query="handleQuery" @reset="handleReset">
             <el-form-item label="姓名">
               <el-input v-model="queryForm.name" placeholder="请输入姓名" clearable />
             </el-form-item>
@@ -83,20 +75,16 @@
                 <el-option label="供应商" value="供应商" />
               </el-select>
             </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="handleQuery">查询</el-button>
-              <el-button @click="handleReset">重置</el-button>
-            </el-form-item>
-          </el-form>
+          </QueryForm>
 
-          <div class="table-actions">
+          <TableActions>
             <el-button type="primary" @click="handleCreate">
               <el-icon><Plus /></el-icon>
               添加联系人
             </el-button>
             <el-button @click="handleExport">导出</el-button>
             <el-button @click="handleImport">导入</el-button>
-          </div>
+          </TableActions>
 
           <el-table :data="externalList" style="width: 100%" v-loading="loading">
             <el-table-column prop="name" label="姓名" width="100" />
@@ -129,15 +117,11 @@
             </el-table-column>
           </el-table>
 
-          <el-pagination
-            v-model:current-page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]"
+          <Pagination
+            v-model:page="pagination.page"
+            v-model:pageSize="pagination.pageSize"
             :total="pagination.total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            class="mt-20"
+            @change="handlePageChange"
           />
         </el-tab-pane>
 
@@ -164,15 +148,11 @@
             </el-table-column>
           </el-table>
 
-          <el-pagination
-            v-model:current-page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]"
+          <Pagination
+            v-model:page="pagination.page"
+            v-model:pageSize="pagination.pageSize"
             :total="pagination.total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            class="mt-20"
+            @change="handlePageChange"
           />
         </el-tab-pane>
       </el-tabs>
@@ -266,20 +246,20 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { QueryForm, TableActions, Pagination } from '@/components/common'
+import { usePagination, useLoading, useDialog } from '@/composables'
+import { contactsApi } from '@/api'
 import type { Contact } from '@/types'
+import type { ContactFormData } from '@/types/form'
 
 const activeTab = ref('internal')
-const loading = ref(false)
-const dialogVisible = ref(false)
-const detailVisible = ref(false)
+const { loading, withLoading } = useLoading()
+const { visible: dialogVisible, open: openDialog, close: closeDialog } = useDialog()
+const { visible: detailVisible, open: openDetail, close: closeDetail } = useDialog()
 const dialogTitle = ref('添加联系人')
 const formRef = ref<FormInstance>()
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  total: 0
-})
+const { pagination, handlePageChange } = usePagination(() => handleQuery())
 
 const queryForm = reactive({
   name: '',
@@ -287,7 +267,7 @@ const queryForm = reactive({
   category: ''
 })
 
-const formData = reactive({
+const formData = reactive<ContactFormData>({
   id: '',
   name: '',
   category: '',
@@ -409,9 +389,16 @@ const handleTabChange = (tab: string) => {
   handleQuery()
 }
 
-const handleQuery = () => {
-  loading.value = true
-  setTimeout(() => {
+const handleQuery = async () => {
+  await withLoading(async () => {
+    // TODO: 调用 API
+    // const res = await contactsApi.getList({
+    //   tab: activeTab.value,
+    //   page: pagination.page,
+    //   pageSize: pagination.pageSize,
+    //   ...queryForm
+    // })
+    
     if (activeTab.value === 'internal') {
       pagination.total = internalList.value.length
     } else if (activeTab.value === 'external') {
@@ -419,8 +406,7 @@ const handleQuery = () => {
     } else {
       pagination.total = favoriteList.value.length
     }
-    loading.value = false
-  }, 500)
+  })
 }
 
 const handleReset = () => {
@@ -437,24 +423,28 @@ const handleDeptClick = (data: any) => {
 
 const handleCreate = () => {
   dialogTitle.value = '添加联系人'
-  dialogVisible.value = true
+  openDialog()
 }
 
 const handleEdit = (row: Contact) => {
   dialogTitle.value = '编辑联系人'
   Object.assign(formData, row)
-  dialogVisible.value = true
+  openDialog()
 }
 
 const handleDetail = (row: Contact) => {
   currentContact.value = row
-  detailVisible.value = true
+  openDetail()
 }
 
-const handleFavorite = (row: Contact) => {
-  row.isFavorite = !row.isFavorite
-  ElMessage.success(row.isFavorite ? '已收藏' : '已取消收藏')
-  handleQuery()
+const handleFavorite = async (row: Contact) => {
+  await withLoading(async () => {
+    // TODO: 调用 API
+    // await contactsApi.toggleFavorite(row.id)
+    row.isFavorite = !row.isFavorite
+    ElMessage.success(row.isFavorite ? '已收藏' : '已取消收藏')
+    handleQuery()
+  })
 }
 
 const handleDelete = async (row: Contact) => {
@@ -464,13 +454,18 @@ const handleDelete = async (row: Contact) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    const index = externalList.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      externalList.value.splice(index, 1)
-    }
-    ElMessage.success('删除成功')
-    handleQuery()
+    await withLoading(async () => {
+      // TODO: 调用 API
+      // await contactsApi.delete(row.id)
+      const index = externalList.value.findIndex(item => item.id === row.id)
+      if (index > -1) {
+        externalList.value.splice(index, 1)
+      }
+      ElMessage.success('删除成功')
+      handleQuery()
+    })
   } catch {
+    // 用户取消
   }
 }
 
@@ -492,11 +487,19 @@ const handleImport = () => {
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate((valid) => {
+  await formRef.value.validate(async (valid) => {
     if (valid) {
-      ElMessage.success(dialogTitle.value === '添加联系人' ? '添加成功' : '编辑成功')
-      dialogVisible.value = false
-      handleQuery()
+      await withLoading(async () => {
+        // TODO: 调用 API
+        // if (dialogTitle.value === '添加联系人') {
+        //   await contactsApi.create(formData)
+        // } else {
+        //   await contactsApi.update(formData.id, formData)
+        // }
+        ElMessage.success(dialogTitle.value === '添加联系人' ? '添加成功' : '编辑成功')
+        closeDialog()
+        handleQuery()
+      })
     }
   })
 }
@@ -505,28 +508,10 @@ const handleDialogClose = () => {
   formRef.value?.resetFields()
 }
 
-const handleSizeChange = (size: number) => {
-  pagination.pageSize = size
-  handleQuery()
-}
-
-const handleCurrentChange = (page: number) => {
-  pagination.page = page
-  handleQuery()
-}
-
 handleQuery()
 </script>
 
 <style scoped lang="scss">
-.query-form {
-  margin-bottom: 20px;
-}
-
-.table-actions {
-  margin-bottom: 20px;
-}
-
 .dept-tree {
   height: calc(100vh - 300px);
   overflow-y: auto;
@@ -542,12 +527,5 @@ handleQuery()
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.contact-detail {
-  h3 {
-    margin: 20px 0 10px;
-    color: #333;
-  }
 }
 </style>

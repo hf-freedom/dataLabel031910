@@ -12,9 +12,10 @@
             <el-table-column prop="lastMaintenance" label="上次保养" width="120" />
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)" size="small">
-                  {{ getStatusText(row.status) }}
-                </el-tag>
+                <StatusTag
+                  :type="getVehicleStatus(row.status).type"
+                  :text="getVehicleStatus(row.status).text"
+                />
               </template>
             </el-table-column>
             <el-table-column label="操作" width="150" fixed="right">
@@ -27,12 +28,12 @@
         </el-tab-pane>
 
         <el-tab-pane label="用车申请" name="application">
-          <div class="table-actions">
+          <TableActions>
             <el-button type="primary" @click="handleCreateApplication">
               <el-icon><Plus /></el-icon>
               申请用车
             </el-button>
-          </div>
+          </TableActions>
           <el-table :data="applicationList" style="width: 100%" v-loading="loading">
             <el-table-column prop="applicant" label="申请人" width="100" />
             <el-table-column prop="department" label="部门" width="120" />
@@ -41,9 +42,10 @@
             <el-table-column prop="destination" label="目的地" width="150" show-overflow-tooltip />
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getApplicationStatusType(row.status)" size="small">
-                  {{ getApplicationStatusText(row.status) }}
-                </el-tag>
+                <StatusTag
+                  :type="getVehicleApplicationStatus(row.status).type"
+                  :text="getVehicleApplicationStatus(row.status).text"
+                />
               </template>
             </el-table-column>
             <el-table-column label="操作" width="200" fixed="right">
@@ -72,7 +74,7 @@
         </el-tab-pane>
 
         <el-tab-pane label="用车记录" name="record">
-          <el-form :inline="true" :model="queryForm" class="query-form">
+          <QueryForm :model="queryForm" @query="handleQuery" @reset="handleReset">
             <el-form-item label="申请人">
               <el-input v-model="queryForm.applicant" placeholder="请输入申请人" clearable />
             </el-form-item>
@@ -88,11 +90,7 @@
                 end-placeholder="结束日期"
               />
             </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="handleQuery">查询</el-button>
-              <el-button @click="handleReset">重置</el-button>
-            </el-form-item>
-          </el-form>
+          </QueryForm>
           <el-table :data="recordList" style="width: 100%" v-loading="loading">
             <el-table-column prop="applicant" label="申请人" width="100" />
             <el-table-column prop="assignedVehicle" label="车辆" width="120" />
@@ -103,24 +101,21 @@
             <el-table-column prop="cost" label="费用(元)" width="100" />
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getApplicationStatusType(row.status)" size="small">
-                  {{ getApplicationStatusText(row.status) }}
-                </el-tag>
+                <StatusTag
+                  :type="getVehicleApplicationStatus(row.status).type"
+                  :text="getVehicleApplicationStatus(row.status).text"
+                />
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
       </el-tabs>
 
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.pageSize"
-        :page-sizes="[10, 20, 50, 100]"
+      <Pagination
+        v-model:page="pagination.page"
+        v-model:pageSize="pagination.pageSize"
         :total="pagination.total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        class="mt-20"
+        @change="handlePageChange"
       />
     </el-card>
 
@@ -227,9 +222,10 @@
           <el-descriptions-item label="分配车辆">{{ currentApplication.assignedVehicle || '未分配' }}</el-descriptions-item>
           <el-descriptions-item label="分配司机">{{ currentApplication.assignedDriver || '未分配' }}</el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag :type="getApplicationStatusType(currentApplication.status)">
-              {{ getApplicationStatusText(currentApplication.status) }}
-            </el-tag>
+            <StatusTag
+              :type="getVehicleApplicationStatus(currentApplication.status).type"
+              :text="getVehicleApplicationStatus(currentApplication.status).text"
+            />
           </el-descriptions-item>
         </el-descriptions>
       </div>
@@ -243,20 +239,21 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { QueryForm, TableActions, Pagination, StatusTag } from '@/components/common'
+import { usePagination, useLoading, useDialog, useStatusMapper } from '@/composables'
+import { VehicleStatus, VehicleApplicationStatus } from '@/constants'
+import { vehicleApi } from '@/api'
 import type { Vehicle, VehicleApplication } from '@/types'
+import type { VehicleApplicationFormData, VehicleDispatchFormData } from '@/types/form'
 
 const activeTab = ref('vehicle')
-const loading = ref(false)
-const applicationVisible = ref(false)
-const dispatchVisible = ref(false)
-const detailVisible = ref(false)
+const { loading, withLoading } = useLoading()
+const { visible: applicationVisible, open: openApplication, close: closeApplication } = useDialog()
+const { visible: dispatchVisible, open: openDispatch, close: closeDispatch } = useDialog()
+const { visible: detailVisible, open: openDetail, close: closeDetail } = useDialog()
 const applicationFormRef = ref<FormInstance>()
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  total: 0
-})
+const { pagination, handlePageChange } = usePagination(() => handleQuery())
 
 const queryForm = reactive({
   applicant: '',
@@ -264,7 +261,7 @@ const queryForm = reactive({
   dateRange: []
 })
 
-const applicationForm = reactive({
+const applicationForm = reactive<VehicleApplicationFormData>({
   useTime: '',
   returnTime: '',
   destination: '',
@@ -279,7 +276,7 @@ const applicationRules: FormRules = {
   reason: [{ required: true, message: '请输入用车事由', trigger: 'blur' }]
 }
 
-const dispatchForm = reactive({
+const dispatchForm = reactive<VehicleDispatchFormData>({
   vehicleId: '',
   driver: '',
   remark: ''
@@ -370,54 +367,25 @@ const pendingDispatchList = computed(() => {
   return applicationList.value.filter(a => a.status === 'pending')
 })
 
-const getStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    idle: '空闲',
-    in_use: '使用中',
-    maintenance: '维修中'
-  }
-  return map[status] || '未知'
-}
-
-const getStatusType = (status: string) => {
-  const map: Record<string, any> = {
-    idle: 'success',
-    in_use: 'warning',
-    maintenance: 'danger'
-  }
-  return map[status] || 'info'
-}
-
-const getApplicationStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    pending: '待审批',
-    approved: '已批准',
-    rejected: '已拒绝',
-    in_use: '使用中',
-    completed: '已完成'
-  }
-  return map[status] || '未知'
-}
-
-const getApplicationStatusType = (status: string) => {
-  const map: Record<string, any> = {
-    pending: 'warning',
-    approved: 'success',
-    rejected: 'danger',
-    in_use: 'primary',
-    completed: 'info'
-  }
-  return map[status] || 'info'
-}
+const { getVehicleStatus, getVehicleApplicationStatus } = useStatusMapper()
 
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
   handleQuery()
 }
 
-const handleQuery = () => {
-  loading.value = true
-  setTimeout(() => {
+const handleQuery = async () => {
+  await withLoading(async () => {
+    // TODO: 调用 API
+    // const res = await vehicleApi.getList({
+    //   tab: activeTab.value,
+    //   page: pagination.page,
+    //   pageSize: pagination.pageSize,
+    //   ...queryForm
+    // })
+    // vehicleList.value = res.data.list
+    // pagination.total = res.data.total
+    
     if (activeTab.value === 'vehicle') {
       pagination.total = vehicleList.value.length
     } else if (activeTab.value === 'application') {
@@ -427,8 +395,7 @@ const handleQuery = () => {
     } else {
       pagination.total = recordList.value.length
     }
-    loading.value = false
-  }, 500)
+  })
 }
 
 const handleReset = () => {
@@ -439,16 +406,20 @@ const handleReset = () => {
 }
 
 const handleCreateApplication = () => {
-  applicationVisible.value = true
+  openApplication()
 }
 
 const handleApplicationSubmit = async () => {
   if (!applicationFormRef.value) return
-  await applicationFormRef.value.validate((valid) => {
+  await applicationFormRef.value.validate(async (valid) => {
     if (valid) {
-      ElMessage.success('申请提交成功')
-      applicationVisible.value = false
-      handleQuery()
+      await withLoading(async () => {
+        // TODO: 调用 API
+        // await vehicleApi.createApplication(applicationForm)
+        ElMessage.success('申请提交成功')
+        closeApplication()
+        handleQuery()
+      })
     }
   })
 }
@@ -462,26 +433,30 @@ const handleDispatch = (row: VehicleApplication) => {
   dispatchForm.vehicleId = ''
   dispatchForm.driver = ''
   dispatchForm.remark = ''
-  dispatchVisible.value = true
+  openDispatch()
 }
 
-const handleDispatchSubmit = () => {
-  if (currentApplication.value) {
-    currentApplication.value.status = 'approved'
-    const vehicle = vehicleList.value.find(v => v.id === dispatchForm.vehicleId)
-    if (vehicle) {
-      currentApplication.value.assignedVehicle = vehicle.plateNumber
-      currentApplication.value.assignedDriver = dispatchForm.driver
+const handleDispatchSubmit = async () => {
+  await withLoading(async () => {
+    // TODO: 调用 API
+    // await vehicleApi.dispatch(currentApplication.value!.id, dispatchForm)
+    if (currentApplication.value) {
+      currentApplication.value.status = 'approved'
+      const vehicle = vehicleList.value.find(v => v.id === dispatchForm.vehicleId)
+      if (vehicle) {
+        currentApplication.value.assignedVehicle = vehicle.plateNumber
+        currentApplication.value.assignedDriver = dispatchForm.driver
+      }
     }
-  }
-  dispatchVisible.value = false
-  ElMessage.success('调度成功')
-  handleQuery()
+    closeDispatch()
+    ElMessage.success('调度成功')
+    handleQuery()
+  })
 }
 
 const handleApplicationDetail = (row: VehicleApplication) => {
   currentApplication.value = row
-  detailVisible.value = true
+  openDetail()
 }
 
 const handleVehicleDetail = (row: Vehicle) => {
@@ -499,35 +474,22 @@ const handleWithdraw = async (row: VehicleApplication) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    row.status = 'rejected'
-    ElMessage.success('撤回成功')
-    handleQuery()
+    await withLoading(async () => {
+      // TODO: 调用 API
+      // await vehicleApi.withdraw(row.id)
+      row.status = 'rejected'
+      ElMessage.success('撤回成功')
+      handleQuery()
+    })
   } catch {
+    // 用户取消
   }
-}
-
-const handleSizeChange = (size: number) => {
-  pagination.pageSize = size
-  handleQuery()
-}
-
-const handleCurrentChange = (page: number) => {
-  pagination.page = page
-  handleQuery()
 }
 
 handleQuery()
 </script>
 
 <style scoped lang="scss">
-.query-form {
-  margin-bottom: 20px;
-}
-
-.table-actions {
-  margin-bottom: 20px;
-}
-
 .application-detail {
   h3 {
     margin: 20px 0 10px;

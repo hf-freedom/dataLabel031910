@@ -1,38 +1,37 @@
 <template>
   <div class="page-container">
     <el-card>
-      <el-form :inline="true" :model="queryForm" class="query-form">
+      <QueryForm :model="queryForm" @query="handleQuery" @reset="handleReset">
         <el-form-item label="标题">
           <el-input v-model="queryForm.title" placeholder="请输入标题" clearable />
         </el-form-item>
         <el-form-item label="部门">
           <el-select v-model="queryForm.department" placeholder="请选择部门" clearable>
             <el-option label="全部" value="" />
-            <el-option label="技术部" value="技术部" />
-            <el-option label="行政部" value="行政部" />
-            <el-option label="人力资源部" value="人力资源部" />
+            <el-option
+              v-for="dept in Departments"
+              :key="dept.value"
+              :label="dept.label"
+              :value="dept.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="queryForm.status" placeholder="请选择状态" clearable>
             <el-option label="全部" value="" />
-            <el-option label="已发布" value="published" />
-            <el-option label="草稿" value="draft" />
-            <el-option label="已过期" value="expired" />
+            <el-option label="已发布" :value="AnnouncementStatus.PUBLISHED" />
+            <el-option label="草稿" :value="AnnouncementStatus.DRAFT" />
+            <el-option label="已过期" :value="AnnouncementStatus.EXPIRED" />
           </el-select>
         </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleQuery">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
+      </QueryForm>
 
-      <div class="table-actions">
+      <TableActions>
         <el-button type="primary" @click="handleCreate">
           <el-icon><Plus /></el-icon>
           发布公告
         </el-button>
-      </div>
+      </TableActions>
 
       <el-table :data="tableData" style="width: 100%" v-loading="loading">
         <el-table-column prop="title" label="标题" show-overflow-tooltip />
@@ -41,9 +40,10 @@
         <el-table-column prop="publishTime" label="发布时间" width="180" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)" size="small">
-              {{ getStatusText(row.status) }}
-            </el-tag>
+            <StatusTag
+              :type="getAnnouncementStatus(row.status).type"
+              :text="getAnnouncementStatus(row.status).text"
+            />
           </template>
         </el-table-column>
         <el-table-column prop="readStatus" label="阅读状态" width="100">
@@ -56,22 +56,18 @@
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleView(row)">查看</el-button>
-            <el-button type="primary" link @click="handleEdit(row)" v-if="row.status === 'draft'">编辑</el-button>
-            <el-button type="danger" link @click="handleDelete(row)" v-if="row.status === 'draft'">删除</el-button>
-            <el-button type="warning" link @click="handleRecall(row)" v-if="row.status === 'published'">撤回</el-button>
+            <el-button type="primary" link @click="handleEdit(row)" v-if="row.status === AnnouncementStatus.DRAFT">编辑</el-button>
+            <el-button type="danger" link @click="handleDelete(row)" v-if="row.status === AnnouncementStatus.DRAFT">删除</el-button>
+            <el-button type="warning" link @click="handleRecall(row)" v-if="row.status === AnnouncementStatus.PUBLISHED">撤回</el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.pageSize"
-        :page-sizes="[10, 20, 50, 100]"
+      <Pagination
+        v-model:page="pagination.page"
+        v-model:pageSize="pagination.pageSize"
         :total="pagination.total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        class="mt-20"
+        @change="handlePageChange"
       />
     </el-card>
 
@@ -101,9 +97,12 @@
 
         <el-form-item label="选择部门" v-if="formData.scope === 'department'">
           <el-select v-model="formData.scopeData" multiple placeholder="请选择部门">
-            <el-option label="技术部" value="技术部" />
-            <el-option label="行政部" value="行政部" />
-            <el-option label="人力资源部" value="人力资源部" />
+            <el-option
+              v-for="dept in Departments"
+              :key="dept.value"
+              :label="dept.label"
+              :value="dept.value"
+            />
           </el-select>
         </el-form-item>
 
@@ -166,20 +165,20 @@
       title="公告详情"
       width="800px"
     >
-      <div class="announcement-detail">
-        <h2>{{ currentAnnouncement?.title }}</h2>
+      <div class="announcement-detail" v-if="currentAnnouncement">
+        <h2>{{ currentAnnouncement.title }}</h2>
         <div class="detail-info">
-          <span>发布人：{{ currentAnnouncement?.publisher }}</span>
-          <span>部门：{{ currentAnnouncement?.department }}</span>
-          <span>发布时间：{{ currentAnnouncement?.publishTime }}</span>
+          <span>发布人：{{ currentAnnouncement.publisher }}</span>
+          <span>部门：{{ currentAnnouncement.department }}</span>
+          <span>发布时间：{{ currentAnnouncement.publishTime }}</span>
         </div>
         <div class="detail-content">
-          {{ currentAnnouncement?.content }}
+          {{ currentAnnouncement.content }}
         </div>
-        <div class="detail-attachments" v-if="currentAnnouncement?.attachments?.length">
+        <div class="detail-attachments" v-if="currentAnnouncement.attachments?.length">
           <h4>附件：</h4>
           <el-tag
-            v-for="(file, index) in currentAnnouncement?.attachments"
+            v-for="(file, index) in currentAnnouncement.attachments"
             :key="index"
             class="mr-10"
           >
@@ -198,36 +197,38 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { QueryForm, TableActions, Pagination, StatusTag } from '@/components/common'
+import { usePagination, useLoading, useStatusMapper } from '@/composables'
+import { AnnouncementStatus, Departments } from '@/constants'
+import { announcementApi } from '@/api'
 import type { Announcement } from '@/types'
+import type { AnnouncementFormData, AnnouncementQueryForm } from '@/types/form'
 
-const loading = ref(false)
+const { pagination, resetPagination } = usePagination()
+const { loading, startLoading, stopLoading } = useLoading()
+const { getAnnouncementStatus } = useStatusMapper()
+
 const dialogVisible = ref(false)
 const detailVisible = ref(false)
 const dialogTitle = ref('发布公告')
 const formRef = ref<FormInstance>()
 const fileList = ref<any[]>([])
 
-const queryForm = reactive({
+const queryForm = reactive<AnnouncementQueryForm>({
   title: '',
   department: '',
   status: ''
 })
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  total: 0
-})
-
-const formData = reactive({
+const formData = reactive<AnnouncementFormData>({
   id: '',
   title: '',
   content: '',
-  scope: 'all' as 'all' | 'department' | 'specific',
-  scopeData: [] as string[],
+  scope: 'all',
+  scopeData: [],
   effectiveTime: '',
   expireTime: '',
-  status: 'draft' as 'draft' | 'published' | 'expired'
+  status: AnnouncementStatus.DRAFT
 })
 
 const formRules: FormRules = {
@@ -246,7 +247,7 @@ const tableData = ref<Announcement[]>([
     publishTime: '2024-03-20 10:00:00',
     effectiveTime: '2024-03-20 10:00:00',
     expireTime: '2024-04-10 10:00:00',
-    status: 'published',
+    status: AnnouncementStatus.PUBLISHED,
     publisher: '行政部',
     department: '行政部',
     readStatus: true
@@ -259,7 +260,7 @@ const tableData = ref<Announcement[]>([
     publishTime: '2024-03-19 15:00:00',
     effectiveTime: '2024-03-19 15:00:00',
     expireTime: '2024-03-30 15:00:00',
-    status: 'published',
+    status: AnnouncementStatus.PUBLISHED,
     publisher: '技术部',
     department: '技术部',
     readStatus: false
@@ -273,7 +274,7 @@ const tableData = ref<Announcement[]>([
     publishTime: '2024-03-18 09:00:00',
     effectiveTime: '2024-03-18 09:00:00',
     expireTime: '2024-04-01 09:00:00',
-    status: 'published',
+    status: AnnouncementStatus.PUBLISHED,
     publisher: '人力资源部',
     department: '人力资源部',
     readStatus: true
@@ -282,29 +283,11 @@ const tableData = ref<Announcement[]>([
 
 const currentAnnouncement = ref<Announcement | null>(null)
 
-const getStatusType = (status: string) => {
-  const map: Record<string, any> = {
-    published: 'success',
-    draft: 'info',
-    expired: 'danger'
-  }
-  return map[status] || 'info'
-}
-
-const getStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    published: '已发布',
-    draft: '草稿',
-    expired: '已过期'
-  }
-  return map[status] || '未知'
-}
-
 const handleQuery = () => {
-  loading.value = true
+  startLoading()
   setTimeout(() => {
     pagination.total = 3
-    loading.value = false
+    stopLoading()
   }, 500)
 }
 
@@ -312,6 +295,11 @@ const handleReset = () => {
   queryForm.title = ''
   queryForm.department = ''
   queryForm.status = ''
+  resetPagination()
+  handleQuery()
+}
+
+const handlePageChange = () => {
   handleQuery()
 }
 
@@ -354,7 +342,7 @@ const handleRecall = async (row: Announcement) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    row.status = 'draft'
+    row.status = AnnouncementStatus.DRAFT
     ElMessage.success('撤回成功')
   } catch {
   }
@@ -389,58 +377,49 @@ const handleDialogClose = () => {
   fileList.value = []
 }
 
-const handleSizeChange = (size: number) => {
-  pagination.pageSize = size
-  handleQuery()
-}
-
-const handleCurrentChange = (page: number) => {
-  pagination.page = page
-  handleQuery()
-}
-
 handleQuery()
 </script>
 
-<style scoped lang="scss">
-.query-form {
-  margin-bottom: 20px;
+<style scoped>
+.page-container {
+  padding: 20px;
 }
 
-.table-actions {
-  margin-bottom: 20px;
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mr-10 {
+  margin-right: 10px;
 }
 
 .announcement-detail {
-  h2 {
-    margin-bottom: 20px;
-    color: #333;
-  }
+  padding: 20px;
+}
 
-  .detail-info {
-    margin-bottom: 20px;
-    color: #666;
-    font-size: 14px;
+.announcement-detail h2 {
+  margin-bottom: 20px;
+  text-align: center;
+}
 
-    span {
-      margin-right: 30px;
-    }
-  }
+.detail-info {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 14px;
+}
 
-  .detail-content {
-    padding: 20px;
-    background: #f5f5f5;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    line-height: 1.8;
-    color: #333;
-  }
+.detail-content {
+  line-height: 1.8;
+  padding: 20px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  min-height: 200px;
+}
 
-  .detail-attachments {
-    h4 {
-      margin-bottom: 10px;
-      color: #333;
-    }
-  }
+.detail-attachments {
+  margin-top: 20px;
 }
 </style>

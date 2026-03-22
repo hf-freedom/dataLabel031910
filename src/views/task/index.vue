@@ -3,7 +3,7 @@
     <el-card>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane label="我的任务" name="my">
-          <el-form :inline="true" :model="queryForm" class="query-form">
+          <QueryForm :model="queryForm" @query="handleQuery" @reset="handleReset">
             <el-form-item label="任务名称">
               <el-input v-model="queryForm.title" placeholder="请输入任务名称" clearable />
             </el-form-item>
@@ -23,11 +23,7 @@
                 <el-option label="低" value="low" />
               </el-select>
             </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="handleQuery">查询</el-button>
-              <el-button @click="handleReset">重置</el-button>
-            </el-form-item>
-          </el-form>
+          </QueryForm>
 
           <el-table :data="myTaskList" style="width: 100%" v-loading="loading">
             <el-table-column prop="title" label="任务名称" show-overflow-tooltip />
@@ -36,16 +32,18 @@
             <el-table-column prop="deadline" label="截止时间" width="180" />
             <el-table-column prop="priority" label="优先级" width="100">
               <template #default="{ row }">
-                <el-tag :type="getPriorityType(row.priority)" size="small">
-                  {{ getPriorityText(row.priority) }}
-                </el-tag>
+                <StatusTag
+                  :type="getTaskPriority(row.priority).type"
+                  :text="getTaskPriority(row.priority).text"
+                />
               </template>
             </el-table-column>
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)" size="small">
-                  {{ getStatusText(row.status) }}
-                </el-tag>
+                <StatusTag
+                  :type="getTaskStatus(row.status).type"
+                  :text="getTaskStatus(row.status).text"
+                />
               </template>
             </el-table-column>
             <el-table-column label="操作" width="250" fixed="right">
@@ -57,25 +55,21 @@
             </el-table-column>
           </el-table>
 
-          <el-pagination
-            v-model:current-page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]"
+          <Pagination
+            v-model:page="pagination.page"
+            v-model:pageSize="pagination.pageSize"
             :total="pagination.total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            class="mt-20"
+            @change="handlePageChange"
           />
         </el-tab-pane>
 
         <el-tab-pane label="我创建的" name="created">
-          <div class="table-actions">
+          <TableActions>
             <el-button type="primary" @click="handleCreate">
               <el-icon><Plus /></el-icon>
               创建任务
             </el-button>
-          </div>
+          </TableActions>
           <el-table :data="createdTaskList" style="width: 100%" v-loading="loading">
             <el-table-column prop="title" label="任务名称" show-overflow-tooltip />
             <el-table-column prop="assignee" label="执行人" width="100" />
@@ -84,16 +78,18 @@
             <el-table-column prop="deadline" label="截止时间" width="180" />
             <el-table-column prop="priority" label="优先级" width="100">
               <template #default="{ row }">
-                <el-tag :type="getPriorityType(row.priority)" size="small">
-                  {{ getPriorityText(row.priority) }}
-                </el-tag>
+                <StatusTag
+                  :type="getTaskPriority(row.priority).type"
+                  :text="getTaskPriority(row.priority).text"
+                />
               </template>
             </el-table-column>
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)" size="small">
-                  {{ getStatusText(row.status) }}
-                </el-tag>
+                <StatusTag
+                  :type="getTaskStatus(row.status).type"
+                  :text="getTaskStatus(row.status).text"
+                />
               </template>
             </el-table-column>
             <el-table-column label="操作" width="200" fixed="right">
@@ -105,15 +101,11 @@
             </el-table-column>
           </el-table>
 
-          <el-pagination
-            v-model:current-page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]"
+          <Pagination
+            v-model:page="pagination.page"
+            v-model:pageSize="pagination.pageSize"
             :total="pagination.total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            class="mt-20"
+            @change="handlePageChange"
           />
         </el-tab-pane>
 
@@ -286,16 +278,18 @@
           <el-descriptions-item label="执行人">{{ currentTask.assignee }}</el-descriptions-item>
           <el-descriptions-item label="部门">{{ currentTask.department }}</el-descriptions-item>
           <el-descriptions-item label="优先级">
-            <el-tag :type="getPriorityType(currentTask.priority)">
-              {{ getPriorityText(currentTask.priority) }}
-            </el-tag>
+            <StatusTag
+              :type="getTaskPriority(currentTask.priority).type"
+              :text="getTaskPriority(currentTask.priority).text"
+            />
           </el-descriptions-item>
           <el-descriptions-item label="创建时间">{{ currentTask.createTime }}</el-descriptions-item>
           <el-descriptions-item label="截止时间">{{ currentTask.deadline }}</el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag :type="getStatusType(currentTask.status)">
-              {{ getStatusText(currentTask.status) }}
-            </el-tag>
+            <StatusTag
+              :type="getTaskStatus(currentTask.status).type"
+              :text="getTaskStatus(currentTask.status).text"
+            />
           </el-descriptions-item>
           <el-descriptions-item label="任务描述" :span="2">{{ currentTask.description }}</el-descriptions-item>
         </el-descriptions>
@@ -365,23 +359,24 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { QueryForm, TableActions, Pagination, StatusTag } from '@/components/common'
+import { usePagination, useLoading, useDialog, useStatusMapper } from '@/composables'
+import { TaskStatus, TaskPriority } from '@/constants'
+import { taskApi } from '@/api'
 import type { Task } from '@/types'
+import type { TaskFormData, TaskStatusFormData } from '@/types/form'
 
 const activeTab = ref('my')
-const loading = ref(false)
-const dialogVisible = ref(false)
-const detailVisible = ref(false)
-const statusVisible = ref(false)
+const { loading, withLoading } = useLoading()
+const { visible: dialogVisible, open: openDialog, close: closeDialog } = useDialog()
+const { visible: detailVisible, open: openDetail, close: closeDetail } = useDialog()
+const { visible: statusVisible, open: openStatus, close: closeStatus } = useDialog()
 const dialogTitle = ref('创建任务')
 const formRef = ref<FormInstance>()
 const fileList = ref<any[]>([])
 const logFileList = ref<any[]>([])
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  total: 0
-})
+const { pagination, handlePageChange } = usePagination(() => handleQuery())
 
 const queryForm = reactive({
   title: '',
@@ -389,7 +384,7 @@ const queryForm = reactive({
   priority: ''
 })
 
-const formData = reactive({
+const formData = reactive<TaskFormData>({
   id: '',
   title: '',
   description: '',
@@ -406,7 +401,7 @@ const formRules: FormRules = {
   deadline: [{ required: true, message: '请选择截止时间', trigger: 'change' }]
 }
 
-const statusForm = reactive({
+const statusForm = reactive<TaskStatusFormData>({
   status: '',
   content: ''
 })
@@ -473,50 +468,23 @@ const createdTaskList = ref<Task[]>([
 
 const currentTask = ref<Task | null>(null)
 
-const getStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    not_started: '未开始',
-    in_progress: '进行中',
-    completed: '已完成'
-  }
-  return map[status] || '未知'
-}
-
-const getStatusType = (status: string) => {
-  const map: Record<string, any> = {
-    not_started: 'info',
-    in_progress: 'warning',
-    completed: 'success'
-  }
-  return map[status] || 'info'
-}
-
-const getPriorityText = (priority: string) => {
-  const map: Record<string, string> = {
-    high: '高',
-    medium: '中',
-    low: '低'
-  }
-  return map[priority] || '未知'
-}
-
-const getPriorityType = (priority: string) => {
-  const map: Record<string, any> = {
-    high: 'danger',
-    medium: 'warning',
-    low: 'info'
-  }
-  return map[priority] || 'info'
-}
+const { getTaskStatus, getTaskPriority } = useStatusMapper()
 
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
   handleQuery()
 }
 
-const handleQuery = () => {
-  loading.value = true
-  setTimeout(() => {
+const handleQuery = async () => {
+  await withLoading(async () => {
+    // TODO: 调用 API
+    // const res = await taskApi.getList({
+    //   tab: activeTab.value,
+    //   page: pagination.page,
+    //   pageSize: pagination.pageSize,
+    //   ...queryForm
+    // })
+    
     if (activeTab.value === 'my') {
       pagination.total = myTaskList.value.length
     } else if (activeTab.value === 'created') {
@@ -524,8 +492,7 @@ const handleQuery = () => {
     } else {
       pagination.total = 0
     }
-    loading.value = false
-  }, 500)
+  })
 }
 
 const handleReset = () => {
@@ -537,29 +504,33 @@ const handleReset = () => {
 
 const handleCreate = () => {
   dialogTitle.value = '创建任务'
-  dialogVisible.value = true
+  openDialog()
 }
 
 const handleEdit = (row: Task) => {
   dialogTitle.value = '编辑任务'
   Object.assign(formData, row)
-  dialogVisible.value = true
+  openDialog()
 }
 
 const handleDetail = (row: Task) => {
   currentTask.value = row
-  detailVisible.value = true
+  openDetail()
 }
 
 const handleUpdateStatus = (row: Task) => {
   currentTask.value = row
   statusForm.status = row.status
   statusForm.content = ''
-  statusVisible.value = true
+  openStatus()
 }
 
-const handleRemind = (row: Task) => {
-  ElMessage.success(`已向${row.assignee}发送催办提醒`)
+const handleRemind = async (row: Task) => {
+  await withLoading(async () => {
+    // TODO: 调用 API
+    // await taskApi.remind(row.id)
+    ElMessage.success(`已向${row.assignee}发送催办提醒`)
+  })
 }
 
 const handleDelete = async (row: Task) => {
@@ -569,23 +540,36 @@ const handleDelete = async (row: Task) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    const index = createdTaskList.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      createdTaskList.value.splice(index, 1)
-    }
-    ElMessage.success('删除成功')
-    handleQuery()
+    await withLoading(async () => {
+      // TODO: 调用 API
+      // await taskApi.delete(row.id)
+      const index = createdTaskList.value.findIndex(item => item.id === row.id)
+      if (index > -1) {
+        createdTaskList.value.splice(index, 1)
+      }
+      ElMessage.success('删除成功')
+      handleQuery()
+    })
   } catch {
+    // 用户取消
   }
 }
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate((valid) => {
+  await formRef.value.validate(async (valid) => {
     if (valid) {
-      ElMessage.success(dialogTitle.value === '创建任务' ? '创建成功' : '编辑成功')
-      dialogVisible.value = false
-      handleQuery()
+      await withLoading(async () => {
+        // TODO: 调用 API
+        // if (dialogTitle.value === '创建任务') {
+        //   await taskApi.create(formData)
+        // } else {
+        //   await taskApi.update(formData.id, formData)
+        // }
+        ElMessage.success(dialogTitle.value === '创建任务' ? '创建成功' : '编辑成功')
+        closeDialog()
+        handleQuery()
+      })
     }
   })
 }
@@ -594,18 +578,22 @@ const handleAddLog = () => {
   ElMessage.info('添加日志功能开发中')
 }
 
-const handleStatusSubmit = () => {
-  if (currentTask.value) {
-    currentTask.value.status = statusForm.status as any
-    currentTask.value.logs.push({
-      content: statusForm.content,
-      time: new Date().toLocaleString(),
-      author: '张三'
-    })
-  }
-  statusVisible.value = false
-  ElMessage.success('状态更新成功')
-  handleQuery()
+const handleStatusSubmit = async () => {
+  await withLoading(async () => {
+    // TODO: 调用 API
+    // await taskApi.updateStatus(currentTask.value!.id, statusForm)
+    if (currentTask.value) {
+      currentTask.value.status = statusForm.status as any
+      currentTask.value.logs.push({
+        content: statusForm.content,
+        time: new Date().toLocaleString(),
+        author: '张三'
+      })
+    }
+    closeStatus()
+    ElMessage.success('状态更新成功')
+    handleQuery()
+  })
 }
 
 const handleDialogClose = () => {
@@ -613,28 +601,10 @@ const handleDialogClose = () => {
   fileList.value = []
 }
 
-const handleSizeChange = (size: number) => {
-  pagination.pageSize = size
-  handleQuery()
-}
-
-const handleCurrentChange = (page: number) => {
-  pagination.page = page
-  handleQuery()
-}
-
 handleQuery()
 </script>
 
 <style scoped lang="scss">
-.query-form {
-  margin-bottom: 20px;
-}
-
-.table-actions {
-  margin-bottom: 20px;
-}
-
 .stat-card {
   .stat-content {
     display: flex;

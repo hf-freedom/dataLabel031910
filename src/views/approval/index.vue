@@ -7,9 +7,10 @@
             <el-table-column prop="title" label="审批标题" show-overflow-tooltip />
             <el-table-column prop="type" label="类型" width="100">
               <template #default="{ row }">
-                <el-tag :type="getTypeColor(row.type)" size="small">
-                  {{ getTypeText(row.type) }}
-                </el-tag>
+                <StatusTag
+                  :type="getApprovalType(row.type).type"
+                  :text="getApprovalType(row.type).text"
+                />
               </template>
             </el-table-column>
             <el-table-column prop="applicant" label="申请人" width="100" />
@@ -29,17 +30,19 @@
             <el-table-column prop="title" label="审批标题" show-overflow-tooltip />
             <el-table-column prop="type" label="类型" width="100">
               <template #default="{ row }">
-                <el-tag :type="getTypeColor(row.type)" size="small">
-                  {{ getTypeText(row.type) }}
-                </el-tag>
+                <StatusTag
+                  :type="getApprovalType(row.type).type"
+                  :text="getApprovalType(row.type).text"
+                />
               </template>
             </el-table-column>
             <el-table-column prop="applicant" label="申请人" width="100" />
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getStatusColor(row.status)" size="small">
-                  {{ getStatusText(row.status) }}
-                </el-tag>
+                <StatusTag
+                  :type="getApprovalStatus(row.status).type"
+                  :text="getApprovalStatus(row.status).text"
+                />
               </template>
             </el-table-column>
             <el-table-column prop="applyTime" label="申请时间" width="180" />
@@ -52,26 +55,28 @@
         </el-tab-pane>
 
         <el-tab-pane label="我发起的" name="my">
-          <div class="table-actions">
+          <TableActions>
             <el-button type="primary" @click="handleCreate">
               <el-icon><Plus /></el-icon>
               发起审批
             </el-button>
-          </div>
+          </TableActions>
           <el-table :data="myList" style="width: 100%" v-loading="loading">
             <el-table-column prop="title" label="审批标题" show-overflow-tooltip />
             <el-table-column prop="type" label="类型" width="100">
               <template #default="{ row }">
-                <el-tag :type="getTypeColor(row.type)" size="small">
-                  {{ getTypeText(row.type) }}
-                </el-tag>
+                <StatusTag
+                  :type="getApprovalType(row.type).type"
+                  :text="getApprovalType(row.type).text"
+                />
               </template>
             </el-table-column>
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getStatusColor(row.status)" size="small">
-                  {{ getStatusText(row.status) }}
-                </el-tag>
+                <StatusTag
+                  :type="getApprovalStatus(row.status).type"
+                  :text="getApprovalStatus(row.status).text"
+                />
               </template>
             </el-table-column>
             <el-table-column prop="currentApprover" label="当前审批人" width="120" />
@@ -79,22 +84,18 @@
             <el-table-column label="操作" width="200" fixed="right">
               <template #default="{ row }">
                 <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
-                <el-button type="warning" link @click="handleWithdraw(row)" v-if="row.status === 'pending'">撤回</el-button>
+                <el-button type="warning" link @click="handleWithdraw(row)" v-if="row.status === ApprovalStatus.PENDING">撤回</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
       </el-tabs>
 
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.pageSize"
-        :page-sizes="[10, 20, 50, 100]"
+      <Pagination
+        v-model:page="pagination.page"
+        v-model:pageSize="pagination.pageSize"
         :total="pagination.total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        class="mt-20"
+        @change="handlePageChange"
       />
     </el-card>
 
@@ -112,9 +113,9 @@
       >
         <el-form-item label="审批类型" prop="type">
           <el-select v-model="createForm.type" placeholder="请选择审批类型" @change="handleTypeChange">
-            <el-option label="请假" value="leave" />
-            <el-option label="报销" value="expense" />
-            <el-option label="用印" value="seal" />
+            <el-option label="请假" :value="ApprovalType.LEAVE" />
+            <el-option label="报销" :value="ApprovalType.EXPENSE" />
+            <el-option label="用印" :value="ApprovalType.SEAL" />
           </el-select>
         </el-form-item>
 
@@ -130,7 +131,7 @@
           </el-select>
         </el-form-item>
 
-        <template v-if="createForm.type === 'leave'">
+        <template v-if="createForm.type === ApprovalType.LEAVE">
           <el-form-item label="请假类型" prop="leaveType">
             <el-select v-model="createForm.leaveType" placeholder="请选择请假类型">
               <el-option label="事假" value="事假" />
@@ -162,7 +163,7 @@
           </el-form-item>
         </template>
 
-        <template v-if="createForm.type === 'expense'">
+        <template v-if="createForm.type === ApprovalType.EXPENSE">
           <el-form-item label="报销类型" prop="expenseType">
             <el-select v-model="createForm.expenseType" placeholder="请选择报销类型">
               <el-option label="差旅费" value="差旅费" />
@@ -178,7 +179,7 @@
           </el-form-item>
         </template>
 
-        <template v-if="createForm.type === 'seal'">
+        <template v-if="createForm.type === ApprovalType.SEAL">
           <el-form-item label="印章类型" prop="sealType">
             <el-select v-model="createForm.sealType" placeholder="请选择印章类型">
               <el-option label="公章" value="公章" />
@@ -253,14 +254,15 @@
       <div class="approval-detail" v-if="currentApproval">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="审批标题">{{ currentApproval.title }}</el-descriptions-item>
-          <el-descriptions-item label="审批类型">{{ getTypeText(currentApproval.type) }}</el-descriptions-item>
+          <el-descriptions-item label="审批类型">{{ getApprovalType(currentApproval.type).text }}</el-descriptions-item>
           <el-descriptions-item label="申请人">{{ currentApproval.applicant }}</el-descriptions-item>
           <el-descriptions-item label="部门">{{ currentApproval.department }}</el-descriptions-item>
           <el-descriptions-item label="申请时间">{{ currentApproval.applyTime }}</el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag :type="getStatusColor(currentApproval.status)">
-              {{ getStatusText(currentApproval.status) }}
-            </el-tag>
+            <StatusTag
+              :type="getApprovalStatus(currentApproval.status).type"
+              :text="getApprovalStatus(currentApproval.status).text"
+            />
           </el-descriptions-item>
         </el-descriptions>
 
@@ -272,7 +274,7 @@
             :timestamp="item.time"
           >
             <h4>{{ item.name }}</h4>
-            <p>审批状态：<el-tag :type="getStatusColor(item.status)" size="small">{{ getStatusText(item.status) }}</el-tag></p>
+            <p>审批状态：<StatusTag :type="getApprovalStatus(item.status).type" :text="getApprovalStatus(item.status).text" size="small" /></p>
             <p v-if="item.opinion">审批意见：{{ item.opinion }}</p>
           </el-timeline-item>
         </el-timeline>
@@ -287,26 +289,28 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { TableActions, Pagination, StatusTag } from '@/components/common'
+import { usePagination, useLoading, useStatusMapper } from '@/composables'
+import { ApprovalStatus, ApprovalType } from '@/constants'
+import { approvalApi } from '@/api'
 import type { Approval } from '@/types'
+import type { ApprovalCreateForm, ApprovalActionForm } from '@/types/form'
 
 const activeTab = ref('pending')
-const loading = ref(false)
+const { pagination, resetPagination } = usePagination()
+const { loading, startLoading, stopLoading } = useLoading()
+const { getApprovalStatus, getApprovalType } = useStatusMapper()
+
 const createVisible = ref(false)
 const approveVisible = ref(false)
 const detailVisible = ref(false)
 const createFormRef = ref<FormInstance>()
 const fileList = ref<any[]>([])
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  total: 0
-})
-
-const createForm = reactive({
+const createForm = reactive<ApprovalCreateForm>({
   type: '',
   title: '',
-  approvers: [] as string[],
+  approvers: [],
   leaveType: '',
   startTime: '',
   endTime: '',
@@ -324,7 +328,7 @@ const createRules: FormRules = {
   approvers: [{ required: true, message: '请选择审批人', trigger: 'change' }]
 }
 
-const approveForm = reactive({
+const approveForm = reactive<ApprovalActionForm>({
   action: 'approve',
   transferTo: '',
   opinion: ''
@@ -335,16 +339,16 @@ const currentApproval = ref<Approval | null>(null)
 const pendingList = ref<Approval[]>([
   {
     id: '1',
-    type: 'leave',
+    type: ApprovalType.LEAVE,
     title: '张三-事假申请',
     applicant: '张三',
     department: '技术部',
     applyTime: '2024-03-22 09:00:00',
-    status: 'pending',
+    status: ApprovalStatus.PENDING,
     currentApprover: '张经理',
     approvers: [
-      { name: '张经理', status: 'pending' },
-      { name: '李总监', status: 'pending' }
+      { name: '张经理', status: ApprovalStatus.PENDING },
+      { name: '李总监', status: ApprovalStatus.PENDING }
     ],
     formData: {
       leaveType: '事假',
@@ -356,15 +360,15 @@ const pendingList = ref<Approval[]>([
   },
   {
     id: '2',
-    type: 'expense',
+    type: ApprovalType.EXPENSE,
     title: '李四-差旅费报销',
     applicant: '李四',
     department: '行政部',
     applyTime: '2024-03-22 10:30:00',
-    status: 'pending',
+    status: ApprovalStatus.PENDING,
     currentApprover: '张经理',
     approvers: [
-      { name: '张经理', status: 'pending' }
+      { name: '张经理', status: ApprovalStatus.PENDING }
     ],
     formData: {
       expenseType: '差旅费',
@@ -377,15 +381,15 @@ const pendingList = ref<Approval[]>([
 const approvedList = ref<Approval[]>([
   {
     id: '3',
-    type: 'seal',
+    type: ApprovalType.SEAL,
     title: '王五-合同用印申请',
     applicant: '王五',
     department: '人力资源部',
     applyTime: '2024-03-21 14:00:00',
-    status: 'approved',
+    status: ApprovalStatus.APPROVED,
     currentApprover: '张经理',
     approvers: [
-      { name: '张经理', status: 'approved', opinion: '同意', time: '2024-03-21 15:00:00' }
+      { name: '张经理', status: ApprovalStatus.APPROVED, opinion: '同意', time: '2024-03-21 15:00:00' }
     ],
     formData: {
       sealType: '公章',
@@ -398,81 +402,41 @@ const approvedList = ref<Approval[]>([
 const myList = ref<Approval[]>([
   {
     id: '4',
-    type: 'leave',
-    title: '赵六-年假申请',
-    applicant: '赵六',
+    type: ApprovalType.LEAVE,
+    title: '我的请假申请',
+    applicant: '我',
     department: '技术部',
     applyTime: '2024-03-20 09:00:00',
-    status: 'approved',
+    status: ApprovalStatus.PENDING,
     currentApprover: '张经理',
     approvers: [
-      { name: '张经理', status: 'approved', opinion: '同意', time: '2024-03-20 10:00:00' }
+      { name: '张经理', status: ApprovalStatus.PENDING }
     ],
     formData: {
       leaveType: '年假',
-      startTime: '2024-04-01 09:00:00',
-      endTime: '2024-04-05 18:00:00',
-      days: 5,
-      reason: '年假休息'
+      startTime: '2024-03-25 09:00:00',
+      endTime: '2024-03-27 18:00:00',
+      days: 3,
+      reason: '休假'
     }
   }
 ])
 
-const getTypeText = (type: string) => {
-  const map: Record<string, string> = {
-    leave: '请假',
-    expense: '报销',
-    seal: '用印'
-  }
-  return map[type] || '未知'
-}
-
-const getTypeColor = (type: string) => {
-  const map: Record<string, any> = {
-    leave: 'primary',
-    expense: 'success',
-    seal: 'warning'
-  }
-  return map[type] || 'info'
-}
-
-const getStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    pending: '待审批',
-    approved: '已通过',
-    rejected: '已驳回',
-    transferred: '已转交'
-  }
-  return map[status] || '未知'
-}
-
-const getStatusColor = (status: string) => {
-  const map: Record<string, any> = {
-    pending: 'warning',
-    approved: 'success',
-    rejected: 'danger',
-    transferred: 'info'
-  }
-  return map[status] || 'info'
-}
-
-const handleTabChange = (tab: string) => {
-  activeTab.value = tab
+const handleTabChange = () => {
+  resetPagination()
   handleQuery()
 }
 
 const handleQuery = () => {
-  loading.value = true
+  startLoading()
   setTimeout(() => {
-    if (activeTab.value === 'pending') {
-      pagination.total = pendingList.value.length
-    } else if (activeTab.value === 'approved') {
-      pagination.total = approvedList.value.length
-    } else {
-      pagination.total = myList.value.length
-    }
-    loading.value = false
+    pagination.total = 3
+    stopLoading()
   }, 500)
+}
+
+const handlePageChange = () => {
+  handleQuery()
 }
 
 const handleCreate = () => {
@@ -480,13 +444,36 @@ const handleCreate = () => {
 }
 
 const handleTypeChange = () => {
-  createForm.title = ''
-  createForm.reason = ''
+  createForm.leaveType = ''
+  createForm.expenseType = ''
+  createForm.sealType = ''
+}
+
+const handleCreateClose = () => {
+  createFormRef.value?.resetFields()
+  fileList.value = []
+}
+
+const handleCreateSubmit = async () => {
+  if (!createFormRef.value) return
+  await createFormRef.value.validate((valid) => {
+    if (valid) {
+      ElMessage.success('提交成功')
+      createVisible.value = false
+      handleQuery()
+    }
+  })
 }
 
 const handleApprove = (row: Approval) => {
   currentApproval.value = row
   approveVisible.value = true
+}
+
+const handleApproveSubmit = () => {
+  ElMessage.success('审批成功')
+  approveVisible.value = false
+  handleQuery()
 }
 
 const handleDetail = (row: Approval) => {
@@ -501,63 +488,29 @@ const handleWithdraw = async (row: Approval) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    row.status = 'transferred'
+    row.status = ApprovalStatus.PENDING
     ElMessage.success('撤回成功')
-    handleQuery()
   } catch {
   }
-}
-
-const handleCreateSubmit = async () => {
-  if (!createFormRef.value) return
-  await createFormRef.value.validate((valid) => {
-    if (valid) {
-      ElMessage.success('提交成功')
-      createVisible.value = false
-      handleQuery()
-    }
-  })
-}
-
-const handleApproveSubmit = () => {
-  if (approveForm.action === 'approve') {
-    ElMessage.success('审批通过')
-  } else if (approveForm.action === 'reject') {
-    ElMessage.success('已驳回')
-  } else {
-    ElMessage.success('已转交')
-  }
-  approveVisible.value = false
-  handleQuery()
-}
-
-const handleCreateClose = () => {
-  createFormRef.value?.resetFields()
-  fileList.value = []
-}
-
-const handleSizeChange = (size: number) => {
-  pagination.pageSize = size
-  handleQuery()
-}
-
-const handleCurrentChange = (page: number) => {
-  pagination.page = page
-  handleQuery()
 }
 
 handleQuery()
 </script>
 
-<style scoped lang="scss">
-.table-actions {
-  margin-bottom: 20px;
+<style scoped>
+.page-container {
+  padding: 20px;
+}
+
+.mt-20 {
+  margin-top: 20px;
 }
 
 .approval-detail {
-  h3 {
-    margin: 20px 0 10px;
-    color: #333;
-  }
+  padding: 20px;
+}
+
+.approval-detail h3 {
+  margin: 20px 0 10px;
 }
 </style>

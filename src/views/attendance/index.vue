@@ -3,7 +3,7 @@
     <el-card>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane label="考勤记录" name="record">
-          <el-form :inline="true" :model="queryForm" class="query-form">
+          <QueryForm :model="queryForm" @query="handleQuery" @reset="handleReset">
             <el-form-item label="员工姓名">
               <el-input v-model="queryForm.employeeName" placeholder="请输入员工姓名" clearable />
             </el-form-item>
@@ -33,18 +33,14 @@
                 <el-option label="请假" value="leave" />
               </el-select>
             </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="handleQuery">查询</el-button>
-              <el-button @click="handleReset">重置</el-button>
-            </el-form-item>
-          </el-form>
+          </QueryForm>
 
-          <div class="table-actions">
+          <TableActions>
             <el-button @click="handleExport">
               <el-icon><Download /></el-icon>
               导出Excel
             </el-button>
-          </div>
+          </TableActions>
 
           <el-table :data="recordList" style="width: 100%" v-loading="loading">
             <el-table-column prop="employeeName" label="员工姓名" width="100" />
@@ -54,9 +50,10 @@
             <el-table-column prop="checkOutTime" label="签退时间" width="100" />
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)" size="small">
-                  {{ getStatusText(row.status) }}
-                </el-tag>
+                <StatusTag
+                  :type="getAttendanceStatus(row.status).type"
+                  :text="getAttendanceStatus(row.status).text"
+                />
               </template>
             </el-table-column>
             <el-table-column prop="leaveType" label="请假类型" width="100">
@@ -79,15 +76,11 @@
             </el-table-column>
           </el-table>
 
-          <el-pagination
-            v-model:current-page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]"
+          <Pagination
+            v-model:page="pagination.page"
+            v-model:pageSize="pagination.pageSize"
             :total="pagination.total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            class="mt-20"
+            @change="handlePageChange"
           />
         </el-tab-pane>
 
@@ -192,12 +185,12 @@
         </el-tab-pane>
 
         <el-tab-pane label="补卡申请" name="supplement">
-          <div class="table-actions">
+          <TableActions>
             <el-button type="primary" @click="handleCreate">
               <el-icon><Plus /></el-icon>
               申请补卡
             </el-button>
-          </div>
+          </TableActions>
           <el-table :data="supplementList" style="width: 100%" v-loading="loading">
             <el-table-column prop="employeeName" label="员工姓名" width="100" />
             <el-table-column prop="department" label="部门" width="120" />
@@ -211,8 +204,8 @@
             <el-table-column prop="applyTime" label="申请时间" width="180" />
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getApplicationStatusType(row.status)" size="small">
-                  {{ getApplicationStatusText(row.status) }}
+                <el-tag :type="row.status === 'approved' ? 'success' : row.status === 'rejected' ? 'danger' : 'warning'" size="small">
+                  {{ row.status === 'approved' ? '已通过' : row.status === 'rejected' ? '已拒绝' : '待审批' }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -224,15 +217,11 @@
             </el-table-column>
           </el-table>
 
-          <el-pagination
-            v-model:current-page="pagination.page"
-            v-model:page-size="pagination.pageSize"
-            :page-sizes="[10, 20, 50, 100]"
+          <Pagination
+            v-model:page="pagination.page"
+            v-model:pageSize="pagination.pageSize"
             :total="pagination.total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            class="mt-20"
+            @change="handlePageChange"
           />
         </el-tab-pane>
       </el-tabs>
@@ -311,9 +300,10 @@
           <el-descriptions-item label="签到时间">{{ currentRecord.checkInTime || '-' }}</el-descriptions-item>
           <el-descriptions-item label="签退时间">{{ currentRecord.checkOutTime || '-' }}</el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag :type="getStatusType(currentRecord.status)">
-              {{ getStatusText(currentRecord.status) }}
-            </el-tag>
+            <StatusTag
+              :type="getAttendanceStatus(currentRecord.status).type"
+              :text="getAttendanceStatus(currentRecord.status).text"
+            />
           </el-descriptions-item>
           <el-descriptions-item label="请假类型" :span="2">
             {{ currentRecord.leaveType || '-' }}
@@ -335,20 +325,21 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { QueryForm, TableActions, Pagination, StatusTag } from '@/components/common'
+import { usePagination, useLoading, useDialog, useStatusMapper } from '@/composables'
+import { AttendanceStatus, SupplementStatus } from '@/constants'
+import { attendanceApi } from '@/api'
 import type { AttendanceRecord } from '@/types'
+import type { SupplementFormData } from '@/types/form'
 
 const activeTab = ref('record')
-const loading = ref(false)
-const dialogVisible = ref(false)
-const detailVisible = ref(false)
+const { loading, withLoading } = useLoading()
+const { visible: dialogVisible, open: openDialog, close: closeDialog } = useDialog()
+const { visible: detailVisible, open: openDetail, close: closeDetail } = useDialog()
 const formRef = ref<FormInstance>()
 const fileList = ref<any[]>([])
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  total: 0
-})
+const { pagination, handlePageChange } = usePagination(() => handleQuery())
 
 const queryForm = reactive({
   employeeName: '',
@@ -357,7 +348,7 @@ const queryForm = reactive({
   status: ''
 })
 
-const formData = reactive({
+const formData = reactive<SupplementFormData>({
   date: '',
   type: 'check_in',
   time: '',
@@ -461,54 +452,23 @@ const supplementList = ref([
 
 const currentRecord = ref<AttendanceRecord | null>(null)
 
-const getStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    normal: '正常',
-    late: '迟到',
-    early_leave: '早退',
-    absent: '旷工',
-    leave: '请假'
-  }
-  return map[status] || '未知'
-}
-
-const getStatusType = (status: string) => {
-  const map: Record<string, any> = {
-    normal: 'success',
-    late: 'warning',
-    early_leave: 'warning',
-    absent: 'danger',
-    leave: 'info'
-  }
-  return map[status] || 'info'
-}
-
-const getApplicationStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    pending: '待审批',
-    approved: '已通过',
-    rejected: '已拒绝'
-  }
-  return map[status] || '未知'
-}
-
-const getApplicationStatusType = (status: string) => {
-  const map: Record<string, any> = {
-    pending: 'warning',
-    approved: 'success',
-    rejected: 'danger'
-  }
-  return map[status] || 'info'
-}
+const { getAttendanceStatus } = useStatusMapper()
 
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
   handleQuery()
 }
 
-const handleQuery = () => {
-  loading.value = true
-  setTimeout(() => {
+const handleQuery = async () => {
+  await withLoading(async () => {
+    // TODO: 调用 API
+    // const res = await attendanceApi.getList({
+    //   tab: activeTab.value,
+    //   page: pagination.page,
+    //   pageSize: pagination.pageSize,
+    //   ...queryForm
+    // })
+    
     if (activeTab.value === 'record') {
       pagination.total = recordList.value.length
     } else if (activeTab.value === 'supplement') {
@@ -516,8 +476,7 @@ const handleQuery = () => {
     } else {
       pagination.total = 0
     }
-    loading.value = false
-  }, 500)
+  })
 }
 
 const handleReset = () => {
@@ -529,16 +488,20 @@ const handleReset = () => {
 }
 
 const handleCreate = () => {
-  dialogVisible.value = true
+  openDialog()
 }
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate((valid) => {
+  await formRef.value.validate(async (valid) => {
     if (valid) {
-      ElMessage.success('提交成功')
-      dialogVisible.value = false
-      handleQuery()
+      await withLoading(async () => {
+        // TODO: 调用 API
+        // await attendanceApi.createSupplement(formData)
+        ElMessage.success('提交成功')
+        closeDialog()
+        handleQuery()
+      })
     }
   })
 }
@@ -552,11 +515,15 @@ const handleDetail = (row: any) => {
   if (activeTab.value === 'record') {
     currentRecord.value = row
   }
-  detailVisible.value = true
+  openDetail()
 }
 
-const handleAbnormal = (row: AttendanceRecord) => {
-  ElMessage.info('标记异常功能开发中')
+const handleAbnormal = async (row: AttendanceRecord) => {
+  await withLoading(async () => {
+    // TODO: 调用 API
+    // await attendanceApi.markAbnormal(row.id)
+    ElMessage.info('标记异常功能开发中')
+  })
 }
 
 const handleExport = () => {
@@ -570,38 +537,25 @@ const handleDelete = async (row: any) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    const index = supplementList.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      supplementList.value.splice(index, 1)
-    }
-    ElMessage.success('删除成功')
-    handleQuery()
+    await withLoading(async () => {
+      // TODO: 调用 API
+      // await attendanceApi.deleteSupplement(row.id)
+      const index = supplementList.value.findIndex(item => item.id === row.id)
+      if (index > -1) {
+        supplementList.value.splice(index, 1)
+      }
+      ElMessage.success('删除成功')
+      handleQuery()
+    })
   } catch {
+    // 用户取消
   }
-}
-
-const handleSizeChange = (size: number) => {
-  pagination.pageSize = size
-  handleQuery()
-}
-
-const handleCurrentChange = (page: number) => {
-  pagination.page = page
-  handleQuery()
 }
 
 handleQuery()
 </script>
 
 <style scoped lang="scss">
-.query-form {
-  margin-bottom: 20px;
-}
-
-.table-actions {
-  margin-bottom: 20px;
-}
-
 .stat-card {
   .stat-content {
     display: flex;

@@ -1,17 +1,17 @@
 <template>
   <div class="page-container">
     <el-card>
-      <el-form :inline="true" :model="queryForm" class="query-form">
+      <QueryForm :model="queryForm" @query="handleQuery" @reset="handleReset">
         <el-form-item label="会议主题">
           <el-input v-model="queryForm.title" placeholder="请输入会议主题" clearable />
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="queryForm.status" placeholder="请选择状态" clearable>
             <el-option label="全部" value="" />
-            <el-option label="已预约" value="scheduled" />
-            <el-option label="进行中" value="ongoing" />
-            <el-option label="已完成" value="completed" />
-            <el-option label="已取消" value="cancelled" />
+            <el-option label="已预约" :value="MeetingStatus.SCHEDULED" />
+            <el-option label="进行中" :value="MeetingStatus.ONGOING" />
+            <el-option label="已完成" :value="MeetingStatus.COMPLETED" />
+            <el-option label="已取消" :value="MeetingStatus.CANCELLED" />
           </el-select>
         </el-form-item>
         <el-form-item label="会议时间">
@@ -23,18 +23,14 @@
             end-placeholder="结束日期"
           />
         </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleQuery">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
+      </QueryForm>
 
-      <div class="table-actions">
+      <TableActions>
         <el-button type="primary" @click="handleCreate">
           <el-icon><Plus /></el-icon>
           预约会议
         </el-button>
-      </div>
+      </TableActions>
 
       <el-table :data="tableData" style="width: 100%" v-loading="loading">
         <el-table-column prop="title" label="会议主题" show-overflow-tooltip />
@@ -43,30 +39,27 @@
         <el-table-column prop="organizer" label="组织者" width="100" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)" size="small">
-              {{ getStatusText(row.status) }}
-            </el-tag>
+            <StatusTag
+              :type="getMeetingStatus(row.status).type"
+              :text="getMeetingStatus(row.status).text"
+            />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="300" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
-            <el-button type="primary" link @click="handleEdit(row)" v-if="row.status === 'scheduled'">编辑</el-button>
-            <el-button type="primary" link @click="handleMinutes(row)" v-if="row.status === 'completed'">纪要</el-button>
-            <el-button type="danger" link @click="handleCancel(row)" v-if="row.status === 'scheduled'">取消</el-button>
+            <el-button type="primary" link @click="handleEdit(row)" v-if="row.status === MeetingStatus.SCHEDULED">编辑</el-button>
+            <el-button type="primary" link @click="handleMinutes(row)" v-if="row.status === MeetingStatus.COMPLETED">纪要</el-button>
+            <el-button type="danger" link @click="handleCancel(row)" v-if="row.status === MeetingStatus.SCHEDULED">取消</el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.pageSize"
-        :page-sizes="[10, 20, 50, 100]"
+      <Pagination
+        v-model:page="pagination.page"
+        v-model:pageSize="pagination.pageSize"
         :total="pagination.total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        class="mt-20"
+        @change="handlePageChange"
       />
     </el-card>
 
@@ -155,9 +148,10 @@
           <el-descriptions-item label="会议地点">{{ currentMeeting.location }}</el-descriptions-item>
           <el-descriptions-item label="组织者">{{ currentMeeting.organizer }}</el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag :type="getStatusType(currentMeeting.status)">
-              {{ getStatusText(currentMeeting.status) }}
-            </el-tag>
+            <StatusTag
+              :type="getMeetingStatus(currentMeeting.status).type"
+              :text="getMeetingStatus(currentMeeting.status).text"
+            />
           </el-descriptions-item>
           <el-descriptions-item label="参会人员" :span="2">
             {{ currentMeeting.attendees.join('、') }}
@@ -209,9 +203,17 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { QueryForm, TableActions, Pagination, StatusTag } from '@/components/common'
+import { usePagination, useLoading, useStatusMapper } from '@/composables'
+import { MeetingStatus } from '@/constants'
+import { meetingApi } from '@/api'
 import type { Meeting } from '@/types'
+import type { MeetingFormData, MeetingQueryForm, MeetingMinutesForm } from '@/types/form'
 
-const loading = ref(false)
+const { pagination, resetPagination } = usePagination()
+const { loading, startLoading, stopLoading } = useLoading()
+const { getMeetingStatus } = useStatusMapper()
+
 const dialogVisible = ref(false)
 const detailVisible = ref(false)
 const minutesVisible = ref(false)
@@ -219,25 +221,19 @@ const dialogTitle = ref('预约会议')
 const formRef = ref<FormInstance>()
 const fileList = ref<any[]>([])
 
-const queryForm = reactive({
+const queryForm = reactive<MeetingQueryForm>({
   title: '',
   status: '',
   dateRange: []
 })
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  total: 0
-})
-
-const formData = reactive({
+const formData = reactive<MeetingFormData>({
   id: '',
   title: '',
   time: '',
   location: '',
-  attendees: [] as string[],
-  equipment: [] as string[],
+  attendees: [],
+  equipment: [],
   description: ''
 })
 
@@ -248,7 +244,7 @@ const formRules: FormRules = {
   attendees: [{ required: true, message: '请选择参会人员', trigger: 'change' }]
 }
 
-const minutesForm = reactive({
+const minutesForm = reactive<MeetingMinutesForm>({
   content: '',
   todos: ''
 })
@@ -262,7 +258,7 @@ const tableData = ref<Meeting[]>([
     roomId: 'A',
     attendees: ['张三', '李四', '王五'],
     organizer: '张三',
-    status: 'scheduled'
+    status: MeetingStatus.SCHEDULED
   },
   {
     id: '2',
@@ -272,7 +268,7 @@ const tableData = ref<Meeting[]>([
     roomId: 'B',
     attendees: ['李四', '赵六', '孙七'],
     organizer: '李四',
-    status: 'scheduled'
+    status: MeetingStatus.SCHEDULED
   },
   {
     id: '3',
@@ -282,7 +278,7 @@ const tableData = ref<Meeting[]>([
     roomId: 'C',
     attendees: ['张三', '李四', '王五', '赵六'],
     organizer: '张三',
-    status: 'completed',
+    status: MeetingStatus.COMPLETED,
     minutes: '本次会议主要讨论了Q1的工作成果和Q2的工作计划。',
     materials: ['季度总结报告.pdf', '工作计划.xlsx']
   }
@@ -290,31 +286,11 @@ const tableData = ref<Meeting[]>([
 
 const currentMeeting = ref<Meeting | null>(null)
 
-const getStatusText = (status: string) => {
-  const map: Record<string, string> = {
-    scheduled: '已预约',
-    ongoing: '进行中',
-    completed: '已完成',
-    cancelled: '已取消'
-  }
-  return map[status] || '未知'
-}
-
-const getStatusType = (status: string) => {
-  const map: Record<string, any> = {
-    scheduled: 'primary',
-    ongoing: 'warning',
-    completed: 'success',
-    cancelled: 'info'
-  }
-  return map[status] || 'info'
-}
-
 const handleQuery = () => {
-  loading.value = true
+  startLoading()
   setTimeout(() => {
     pagination.total = tableData.value.length
-    loading.value = false
+    stopLoading()
   }, 500)
 }
 
@@ -322,6 +298,11 @@ const handleReset = () => {
   queryForm.title = ''
   queryForm.status = ''
   queryForm.dateRange = []
+  resetPagination()
+  handleQuery()
+}
+
+const handlePageChange = () => {
   handleQuery()
 }
 
@@ -354,7 +335,7 @@ const handleCancel = async (row: Meeting) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    row.status = 'cancelled'
+    row.status = MeetingStatus.CANCELLED
     ElMessage.success('会议已取消')
     handleQuery()
   } catch {
@@ -385,39 +366,31 @@ const handleDialogClose = () => {
   fileList.value = []
 }
 
-const handleSizeChange = (size: number) => {
-  pagination.pageSize = size
-  handleQuery()
-}
-
-const handleCurrentChange = (page: number) => {
-  pagination.page = page
-  handleQuery()
-}
-
 handleQuery()
 </script>
 
-<style scoped lang="scss">
-.query-form {
-  margin-bottom: 20px;
+<style scoped>
+.page-container {
+  padding: 20px;
 }
 
-.table-actions {
-  margin-bottom: 20px;
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mr-10 {
+  margin-right: 10px;
 }
 
 .meeting-detail {
-  h3 {
-    margin: 20px 0 10px;
-    color: #333;
-  }
+  padding: 20px;
+}
 
-  .minutes-content {
-    padding: 20px;
-    background: #f5f5f5;
-    border-radius: 4px;
-    line-height: 1.8;
-  }
+.minutes-content {
+  line-height: 1.8;
+  padding: 15px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  min-height: 100px;
 }
 </style>
