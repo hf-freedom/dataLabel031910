@@ -1,17 +1,44 @@
 <template>
   <div class="page-container">
     <el-card>
-      <el-form :inline="true" :model="queryForm" class="query-form">
+      <el-form
+        :inline="true"
+        :model="queryForm"
+        class="query-form"
+      >
         <el-form-item label="会议主题">
-          <el-input v-model="queryForm.title" placeholder="请输入会议主题" clearable />
+          <el-input
+            v-model="queryForm.title"
+            placeholder="请输入会议主题"
+            clearable
+          />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="queryForm.status" placeholder="请选择状态" clearable>
-            <el-option label="全部" value="" />
-            <el-option label="已预约" value="scheduled" />
-            <el-option label="进行中" value="ongoing" />
-            <el-option label="已完成" value="completed" />
-            <el-option label="已取消" value="cancelled" />
+          <el-select
+            v-model="queryForm.status"
+            placeholder="请选择状态"
+            clearable
+          >
+            <el-option
+              label="全部"
+              value=""
+            />
+            <el-option
+              label="已预约"
+              value="scheduled"
+            />
+            <el-option
+              label="进行中"
+              value="ongoing"
+            />
+            <el-option
+              label="已完成"
+              value="completed"
+            />
+            <el-option
+              label="已取消"
+              value="cancelled"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="会议时间">
@@ -24,36 +51,104 @@
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleQuery">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
+          <el-button
+            type="primary"
+            @click="handleQuery"
+          >
+            查询
+          </el-button>
+          <el-button @click="handleReset">
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
 
       <div class="table-actions">
-        <el-button type="primary" @click="handleCreate">
+        <el-button
+          type="primary"
+          @click="handleCreate"
+        >
           <el-icon><Plus /></el-icon>
           预约会议
         </el-button>
       </div>
 
-      <el-table :data="tableData" style="width: 100%" v-loading="loading">
-        <el-table-column prop="title" label="会议主题" show-overflow-tooltip />
-        <el-table-column prop="time" label="会议时间" width="180" />
-        <el-table-column prop="location" label="地点" width="150" />
-        <el-table-column prop="organizer" label="组织者" width="100" />
-        <el-table-column prop="status" label="状态" width="100">
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        style="width: 100%"
+      >
+        <el-table-column
+          prop="title"
+          label="会议主题"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="time"
+          label="会议时间"
+          width="180"
+        />
+        <el-table-column
+          prop="location"
+          label="地点"
+          width="150"
+        />
+        <el-table-column
+          prop="organizer"
+          label="组织者"
+          width="100"
+        />
+        <el-table-column
+          prop="status"
+          label="状态"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)" size="small">
+            <el-tag
+              :type="getStatusType(row.status)"
+              size="small"
+            >
               {{ getStatusText(row.status) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="300" fixed="right">
+        <el-table-column
+          label="操作"
+          width="300"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
-            <el-button type="primary" link @click="handleEdit(row)" v-if="row.status === 'scheduled'">编辑</el-button>
-            <el-button type="primary" link @click="handleMinutes(row)" v-if="row.status === 'completed'">纪要</el-button>
-            <el-button type="danger" link @click="handleCancel(row)" v-if="row.status === 'scheduled'">取消</el-button>
+            <el-button
+              type="primary"
+              link
+              @click="handleDetail(row)"
+            >
+              详情
+            </el-button>
+            <el-button
+              v-if="row.status === 'scheduled'"
+              type="primary"
+              link
+              @click="handleEdit(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              v-if="row.status === 'completed'"
+              type="primary"
+              link
+              @click="handleMinutes(row)"
+            >
+              纪要
+            </el-button>
+            <el-button
+              v-if="row.status === 'scheduled'"
+              type="danger"
+              link
+              @click="handleCancel(row)"
+            >
+              取消
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -64,9 +159,9 @@
         :page-sizes="[10, 20, 50, 100]"
         :total="pagination.total"
         layout="total, sizes, prev, pager, next, jumper"
+        class="mt-20"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-        class="mt-20"
       />
     </el-card>
 
@@ -82,11 +177,20 @@
         :rules="formRules"
         label-width="100px"
       >
-        <el-form-item label="会议主题" prop="title">
-          <el-input v-model="formData.title" placeholder="请输入会议主题" />
+        <el-form-item
+          label="会议主题"
+          prop="title"
+        >
+          <el-input
+            v-model="formData.title"
+            placeholder="请输入会议主题"
+          />
         </el-form-item>
 
-        <el-form-item label="会议时间" prop="time">
+        <el-form-item
+          label="会议时间"
+          prop="time"
+        >
           <el-date-picker
             v-model="formData.time"
             type="datetime"
@@ -95,20 +199,54 @@
           />
         </el-form-item>
 
-        <el-form-item label="会议地点" prop="location">
-          <el-select v-model="formData.location" placeholder="请选择会议室">
-            <el-option label="会议室A" value="会议室A" />
-            <el-option label="会议室B" value="会议室B" />
-            <el-option label="会议室C" value="会议室C" />
+        <el-form-item
+          label="会议地点"
+          prop="location"
+        >
+          <el-select
+            v-model="formData.location"
+            placeholder="请选择会议室"
+          >
+            <el-option
+              label="会议室A"
+              value="会议室A"
+            />
+            <el-option
+              label="会议室B"
+              value="会议室B"
+            />
+            <el-option
+              label="会议室C"
+              value="会议室C"
+            />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="参会人员" prop="attendees">
-          <el-select v-model="formData.attendees" multiple placeholder="请选择参会人员">
-            <el-option label="张三" value="张三" />
-            <el-option label="李四" value="李四" />
-            <el-option label="王五" value="王五" />
-            <el-option label="赵六" value="赵六" />
+        <el-form-item
+          label="参会人员"
+          prop="attendees"
+        >
+          <el-select
+            v-model="formData.attendees"
+            multiple
+            placeholder="请选择参会人员"
+          >
+            <el-option
+              label="张三"
+              value="张三"
+            />
+            <el-option
+              label="李四"
+              value="李四"
+            />
+            <el-option
+              label="王五"
+              value="王五"
+            />
+            <el-option
+              label="赵六"
+              value="赵六"
+            />
           </el-select>
         </el-form-item>
 
@@ -122,7 +260,12 @@
         </el-form-item>
 
         <el-form-item label="会议描述">
-          <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入会议描述" />
+          <el-input
+            v-model="formData.description"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入会议描述"
+          />
         </el-form-item>
 
         <el-form-item label="会议资料">
@@ -132,14 +275,23 @@
             :auto-upload="false"
             multiple
           >
-            <el-button type="primary">上传资料</el-button>
+            <el-button type="primary">
+              上传资料
+            </el-button>
           </el-upload>
         </el-form-item>
       </el-form>
 
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleSubmit"
+        >
+          确定
+        </el-button>
       </template>
     </el-dialog>
 
@@ -148,28 +300,56 @@
       title="会议详情"
       width="800px"
     >
-      <div class="meeting-detail" v-if="currentMeeting">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="会议主题" :span="2">{{ currentMeeting.title }}</el-descriptions-item>
-          <el-descriptions-item label="会议时间">{{ currentMeeting.time }}</el-descriptions-item>
-          <el-descriptions-item label="会议地点">{{ currentMeeting.location }}</el-descriptions-item>
-          <el-descriptions-item label="组织者">{{ currentMeeting.organizer }}</el-descriptions-item>
+      <div
+        v-if="currentMeeting"
+        class="meeting-detail"
+      >
+        <el-descriptions
+          :column="2"
+          border
+        >
+          <el-descriptions-item
+            label="会议主题"
+            :span="2"
+          >
+            {{ currentMeeting.title }}
+          </el-descriptions-item>
+          <el-descriptions-item label="会议时间">
+            {{ currentMeeting.time }}
+          </el-descriptions-item>
+          <el-descriptions-item label="会议地点">
+            {{ currentMeeting.location }}
+          </el-descriptions-item>
+          <el-descriptions-item label="组织者">
+            {{ currentMeeting.organizer }}
+          </el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="getStatusType(currentMeeting.status)">
               {{ getStatusText(currentMeeting.status) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="参会人员" :span="2">
+          <el-descriptions-item
+            label="参会人员"
+            :span="2"
+          >
             {{ currentMeeting.attendees.join('、') }}
           </el-descriptions-item>
         </el-descriptions>
 
-        <div class="mt-20" v-if="currentMeeting.minutes">
+        <div
+          v-if="currentMeeting.minutes"
+          class="mt-20"
+        >
           <h3>会议纪要</h3>
-          <div class="minutes-content">{{ currentMeeting.minutes }}</div>
+          <div class="minutes-content">
+            {{ currentMeeting.minutes }}
+          </div>
         </div>
 
-        <div class="mt-20" v-if="currentMeeting.materials?.length">
+        <div
+          v-if="currentMeeting.materials?.length"
+          class="mt-20"
+        >
           <h3>会议资料</h3>
           <el-tag
             v-for="(file, index) in currentMeeting.materials"
@@ -181,7 +361,9 @@
         </div>
       </div>
       <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
+        <el-button @click="detailVisible = false">
+          关闭
+        </el-button>
       </template>
     </el-dialog>
 
@@ -190,17 +372,37 @@
       title="会议纪要"
       width="700px"
     >
-      <el-form :model="minutesForm" label-width="100px">
+      <el-form
+        :model="minutesForm"
+        label-width="100px"
+      >
         <el-form-item label="会议纪要">
-          <el-input v-model="minutesForm.content" type="textarea" :rows="8" placeholder="请输入会议纪要" />
+          <el-input
+            v-model="minutesForm.content"
+            type="textarea"
+            :rows="8"
+            placeholder="请输入会议纪要"
+          />
         </el-form-item>
         <el-form-item label="待办事项">
-          <el-input v-model="minutesForm.todos" type="textarea" :rows="4" placeholder="请输入待办事项，每行一项" />
+          <el-input
+            v-model="minutesForm.todos"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入待办事项，每行一项"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="minutesVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleMinutesSubmit">保存</el-button>
+        <el-button @click="minutesVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleMinutesSubmit"
+        >
+          保存
+        </el-button>
       </template>
     </el-dialog>
   </div>

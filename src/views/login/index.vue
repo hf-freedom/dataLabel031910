@@ -2,7 +2,12 @@
   <div class="login-container">
     <div class="login-box">
       <div class="login-header">
-        <el-icon :size="48" color="#409eff"><OfficeBuilding /></el-icon>
+        <el-icon
+          :size="48"
+          color="#409eff"
+        >
+          <OfficeBuilding />
+        </el-icon>
         <h2>企业办公自动化系统</h2>
         <p>Office Automation System</p>
       </div>
@@ -35,7 +40,9 @@
         </el-form-item>
 
         <el-form-item>
-          <el-checkbox v-model="loginForm.remember">记住密码</el-checkbox>
+          <el-checkbox v-model="loginForm.remember">
+            记住密码
+          </el-checkbox>
         </el-form-item>
 
         <el-form-item>

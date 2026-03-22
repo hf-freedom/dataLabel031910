@@ -1,58 +1,168 @@
 <template>
   <div class="page-container">
     <el-card>
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="我的任务" name="my">
-          <el-form :inline="true" :model="queryForm" class="query-form">
+      <el-tabs
+        v-model="activeTab"
+        @tab-change="handleTabChange"
+      >
+        <el-tab-pane
+          label="我的任务"
+          name="my"
+        >
+          <el-form
+            :inline="true"
+            :model="queryForm"
+            class="query-form"
+          >
             <el-form-item label="任务名称">
-              <el-input v-model="queryForm.title" placeholder="请输入任务名称" clearable />
+              <el-input
+                v-model="queryForm.title"
+                placeholder="请输入任务名称"
+                clearable
+              />
             </el-form-item>
             <el-form-item label="状态">
-              <el-select v-model="queryForm.status" placeholder="请选择状态" clearable>
-                <el-option label="全部" value="" />
-                <el-option label="未开始" value="not_started" />
-                <el-option label="进行中" value="in_progress" />
-                <el-option label="已完成" value="completed" />
+              <el-select
+                v-model="queryForm.status"
+                placeholder="请选择状态"
+                clearable
+              >
+                <el-option
+                  label="全部"
+                  value=""
+                />
+                <el-option
+                  label="未开始"
+                  value="not_started"
+                />
+                <el-option
+                  label="进行中"
+                  value="in_progress"
+                />
+                <el-option
+                  label="已完成"
+                  value="completed"
+                />
               </el-select>
             </el-form-item>
             <el-form-item label="优先级">
-              <el-select v-model="queryForm.priority" placeholder="请选择优先级" clearable>
-                <el-option label="全部" value="" />
-                <el-option label="高" value="high" />
-                <el-option label="中" value="medium" />
-                <el-option label="低" value="low" />
+              <el-select
+                v-model="queryForm.priority"
+                placeholder="请选择优先级"
+                clearable
+              >
+                <el-option
+                  label="全部"
+                  value=""
+                />
+                <el-option
+                  label="高"
+                  value="high"
+                />
+                <el-option
+                  label="中"
+                  value="medium"
+                />
+                <el-option
+                  label="低"
+                  value="low"
+                />
               </el-select>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="handleQuery">查询</el-button>
-              <el-button @click="handleReset">重置</el-button>
+              <el-button
+                type="primary"
+                @click="handleQuery"
+              >
+                查询
+              </el-button>
+              <el-button @click="handleReset">
+                重置
+              </el-button>
             </el-form-item>
           </el-form>
 
-          <el-table :data="myTaskList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="title" label="任务名称" show-overflow-tooltip />
-            <el-table-column prop="creator" label="创建人" width="100" />
-            <el-table-column prop="createTime" label="创建时间" width="180" />
-            <el-table-column prop="deadline" label="截止时间" width="180" />
-            <el-table-column prop="priority" label="优先级" width="100">
+          <el-table
+            v-loading="loading"
+            :data="myTaskList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="title"
+              label="任务名称"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="creator"
+              label="创建人"
+              width="100"
+            />
+            <el-table-column
+              prop="createTime"
+              label="创建时间"
+              width="180"
+            />
+            <el-table-column
+              prop="deadline"
+              label="截止时间"
+              width="180"
+            />
+            <el-table-column
+              prop="priority"
+              label="优先级"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getPriorityType(row.priority)" size="small">
+                <el-tag
+                  :type="getPriorityType(row.priority)"
+                  size="small"
+                >
                   {{ getPriorityText(row.priority) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="status" label="状态" width="100">
+            <el-table-column
+              prop="status"
+              label="状态"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)" size="small">
+                <el-tag
+                  :type="getStatusType(row.status)"
+                  size="small"
+                >
                   {{ getStatusText(row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="250" fixed="right">
+            <el-table-column
+              label="操作"
+              width="250"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
-                <el-button type="primary" link @click="handleUpdateStatus(row)">更新进度</el-button>
-                <el-button type="primary" link @click="handleRemind(row)" v-if="row.status !== 'completed'">催办</el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleDetail(row)"
+                >
+                  详情
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleUpdateStatus(row)"
+                >
+                  更新进度
+                </el-button>
+                <el-button
+                  v-if="row.status !== 'completed'"
+                  type="primary"
+                  link
+                  @click="handleRemind(row)"
+                >
+                  催办
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -63,44 +173,110 @@
             :page-sizes="[10, 20, 50, 100]"
             :total="pagination.total"
             layout="total, sizes, prev, pager, next, jumper"
+            class="mt-20"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            class="mt-20"
           />
         </el-tab-pane>
 
-        <el-tab-pane label="我创建的" name="created">
+        <el-tab-pane
+          label="我创建的"
+          name="created"
+        >
           <div class="table-actions">
-            <el-button type="primary" @click="handleCreate">
+            <el-button
+              type="primary"
+              @click="handleCreate"
+            >
               <el-icon><Plus /></el-icon>
               创建任务
             </el-button>
           </div>
-          <el-table :data="createdTaskList" style="width: 100%" v-loading="loading">
-            <el-table-column prop="title" label="任务名称" show-overflow-tooltip />
-            <el-table-column prop="assignee" label="执行人" width="100" />
-            <el-table-column prop="department" label="部门" width="120" />
-            <el-table-column prop="createTime" label="创建时间" width="180" />
-            <el-table-column prop="deadline" label="截止时间" width="180" />
-            <el-table-column prop="priority" label="优先级" width="100">
+          <el-table
+            v-loading="loading"
+            :data="createdTaskList"
+            style="width: 100%"
+          >
+            <el-table-column
+              prop="title"
+              label="任务名称"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="assignee"
+              label="执行人"
+              width="100"
+            />
+            <el-table-column
+              prop="department"
+              label="部门"
+              width="120"
+            />
+            <el-table-column
+              prop="createTime"
+              label="创建时间"
+              width="180"
+            />
+            <el-table-column
+              prop="deadline"
+              label="截止时间"
+              width="180"
+            />
+            <el-table-column
+              prop="priority"
+              label="优先级"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getPriorityType(row.priority)" size="small">
+                <el-tag
+                  :type="getPriorityType(row.priority)"
+                  size="small"
+                >
                   {{ getPriorityText(row.priority) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="status" label="状态" width="100">
+            <el-table-column
+              prop="status"
+              label="状态"
+              width="100"
+            >
               <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)" size="small">
+                <el-tag
+                  :type="getStatusType(row.status)"
+                  size="small"
+                >
                   {{ getStatusText(row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="200" fixed="right">
+            <el-table-column
+              label="操作"
+              width="200"
+              fixed="right"
+            >
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleDetail(row)">详情</el-button>
-                <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-                <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleDetail(row)"
+                >
+                  详情
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  @click="handleEdit(row)"
+                >
+                  编辑
+                </el-button>
+                <el-button
+                  type="danger"
+                  link
+                  @click="handleDelete(row)"
+                >
+                  删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -111,23 +287,38 @@
             :page-sizes="[10, 20, 50, 100]"
             :total="pagination.total"
             layout="total, sizes, prev, pager, next, jumper"
+            class="mt-20"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            class="mt-20"
           />
         </el-tab-pane>
 
-        <el-tab-pane label="任务统计" name="statistics">
+        <el-tab-pane
+          label="任务统计"
+          name="statistics"
+        >
           <el-row :gutter="20">
             <el-col :span="6">
               <el-card class="stat-card">
                 <div class="stat-content">
-                  <div class="stat-icon" style="background: #409eff">
-                    <el-icon :size="32" color="#fff"><List /></el-icon>
+                  <div
+                    class="stat-icon"
+                    style="background: #409eff"
+                  >
+                    <el-icon
+                      :size="32"
+                      color="#fff"
+                    >
+                      <List />
+                    </el-icon>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ statistics.total }}</div>
-                    <div class="stat-label">总任务数</div>
+                    <div class="stat-value">
+                      {{ statistics.total }}
+                    </div>
+                    <div class="stat-label">
+                      总任务数
+                    </div>
                   </div>
                 </div>
               </el-card>
@@ -135,12 +326,24 @@
             <el-col :span="6">
               <el-card class="stat-card">
                 <div class="stat-content">
-                  <div class="stat-icon" style="background: #67c23a">
-                    <el-icon :size="32" color="#fff"><CircleCheck /></el-icon>
+                  <div
+                    class="stat-icon"
+                    style="background: #67c23a"
+                  >
+                    <el-icon
+                      :size="32"
+                      color="#fff"
+                    >
+                      <CircleCheck />
+                    </el-icon>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ statistics.completed }}</div>
-                    <div class="stat-label">已完成</div>
+                    <div class="stat-value">
+                      {{ statistics.completed }}
+                    </div>
+                    <div class="stat-label">
+                      已完成
+                    </div>
                   </div>
                 </div>
               </el-card>
@@ -148,12 +351,24 @@
             <el-col :span="6">
               <el-card class="stat-card">
                 <div class="stat-content">
-                  <div class="stat-icon" style="background: #e6a23c">
-                    <el-icon :size="32" color="#fff"><Clock /></el-icon>
+                  <div
+                    class="stat-icon"
+                    style="background: #e6a23c"
+                  >
+                    <el-icon
+                      :size="32"
+                      color="#fff"
+                    >
+                      <Clock />
+                    </el-icon>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ statistics.inProgress }}</div>
-                    <div class="stat-label">进行中</div>
+                    <div class="stat-value">
+                      {{ statistics.inProgress }}
+                    </div>
+                    <div class="stat-label">
+                      进行中
+                    </div>
                   </div>
                 </div>
               </el-card>
@@ -161,19 +376,34 @@
             <el-col :span="6">
               <el-card class="stat-card">
                 <div class="stat-content">
-                  <div class="stat-icon" style="background: #f56c6c">
-                    <el-icon :size="32" color="#fff"><Warning /></el-icon>
+                  <div
+                    class="stat-icon"
+                    style="background: #f56c6c"
+                  >
+                    <el-icon
+                      :size="32"
+                      color="#fff"
+                    >
+                      <Warning />
+                    </el-icon>
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ statistics.overdue }}</div>
-                    <div class="stat-label">已逾期</div>
+                    <div class="stat-value">
+                      {{ statistics.overdue }}
+                    </div>
+                    <div class="stat-label">
+                      已逾期
+                    </div>
                   </div>
                 </div>
               </el-card>
             </el-col>
           </el-row>
 
-          <el-row :gutter="20" class="mt-20">
+          <el-row
+            :gutter="20"
+            class="mt-20"
+          >
             <el-col :span="12">
               <el-card>
                 <template #header>
@@ -215,31 +445,76 @@
         :rules="formRules"
         label-width="100px"
       >
-        <el-form-item label="任务名称" prop="title">
-          <el-input v-model="formData.title" placeholder="请输入任务名称" />
+        <el-form-item
+          label="任务名称"
+          prop="title"
+        >
+          <el-input
+            v-model="formData.title"
+            placeholder="请输入任务名称"
+          />
         </el-form-item>
 
-        <el-form-item label="任务描述" prop="description">
-          <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入任务描述" />
+        <el-form-item
+          label="任务描述"
+          prop="description"
+        >
+          <el-input
+            v-model="formData.description"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入任务描述"
+          />
         </el-form-item>
 
-        <el-form-item label="执行人" prop="assignee">
-          <el-select v-model="formData.assignee" placeholder="请选择执行人">
-            <el-option label="张三" value="张三" />
-            <el-option label="李四" value="李四" />
-            <el-option label="王五" value="王五" />
+        <el-form-item
+          label="执行人"
+          prop="assignee"
+        >
+          <el-select
+            v-model="formData.assignee"
+            placeholder="请选择执行人"
+          >
+            <el-option
+              label="张三"
+              value="张三"
+            />
+            <el-option
+              label="李四"
+              value="李四"
+            />
+            <el-option
+              label="王五"
+              value="王五"
+            />
           </el-select>
         </el-form-item>
 
         <el-form-item label="抄送人">
-          <el-select v-model="formData.cc" multiple placeholder="请选择抄送人">
-            <el-option label="张三" value="张三" />
-            <el-option label="李四" value="李四" />
-            <el-option label="王五" value="王五" />
+          <el-select
+            v-model="formData.cc"
+            multiple
+            placeholder="请选择抄送人"
+          >
+            <el-option
+              label="张三"
+              value="张三"
+            />
+            <el-option
+              label="李四"
+              value="李四"
+            />
+            <el-option
+              label="王五"
+              value="王五"
+            />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="截止时间" prop="deadline">
+        <el-form-item
+          label="截止时间"
+          prop="deadline"
+        >
           <el-date-picker
             v-model="formData.deadline"
             type="datetime"
@@ -248,11 +523,20 @@
           />
         </el-form-item>
 
-        <el-form-item label="优先级" prop="priority">
+        <el-form-item
+          label="优先级"
+          prop="priority"
+        >
           <el-radio-group v-model="formData.priority">
-            <el-radio label="high">高</el-radio>
-            <el-radio label="medium">中</el-radio>
-            <el-radio label="low">低</el-radio>
+            <el-radio label="high">
+              高
+            </el-radio>
+            <el-radio label="medium">
+              中
+            </el-radio>
+            <el-radio label="low">
+              低
+            </el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -263,14 +547,23 @@
             :auto-upload="false"
             multiple
           >
-            <el-button type="primary">上传附件</el-button>
+            <el-button type="primary">
+              上传附件
+            </el-button>
           </el-upload>
         </el-form-item>
       </el-form>
 
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleSubmit"
+        >
+          确定
+        </el-button>
       </template>
     </el-dialog>
 
@@ -279,28 +572,56 @@
       title="任务详情"
       width="800px"
     >
-      <div class="task-detail" v-if="currentTask">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="任务名称" :span="2">{{ currentTask.title }}</el-descriptions-item>
-          <el-descriptions-item label="创建人">{{ currentTask.creator }}</el-descriptions-item>
-          <el-descriptions-item label="执行人">{{ currentTask.assignee }}</el-descriptions-item>
-          <el-descriptions-item label="部门">{{ currentTask.department }}</el-descriptions-item>
+      <div
+        v-if="currentTask"
+        class="task-detail"
+      >
+        <el-descriptions
+          :column="2"
+          border
+        >
+          <el-descriptions-item
+            label="任务名称"
+            :span="2"
+          >
+            {{ currentTask.title }}
+          </el-descriptions-item>
+          <el-descriptions-item label="创建人">
+            {{ currentTask.creator }}
+          </el-descriptions-item>
+          <el-descriptions-item label="执行人">
+            {{ currentTask.assignee }}
+          </el-descriptions-item>
+          <el-descriptions-item label="部门">
+            {{ currentTask.department }}
+          </el-descriptions-item>
           <el-descriptions-item label="优先级">
             <el-tag :type="getPriorityType(currentTask.priority)">
               {{ getPriorityText(currentTask.priority) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ currentTask.createTime }}</el-descriptions-item>
-          <el-descriptions-item label="截止时间">{{ currentTask.deadline }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">
+            {{ currentTask.createTime }}
+          </el-descriptions-item>
+          <el-descriptions-item label="截止时间">
+            {{ currentTask.deadline }}
+          </el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="getStatusType(currentTask.status)">
               {{ getStatusText(currentTask.status) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="任务描述" :span="2">{{ currentTask.description }}</el-descriptions-item>
+          <el-descriptions-item
+            label="任务描述"
+            :span="2"
+          >
+            {{ currentTask.description }}
+          </el-descriptions-item>
         </el-descriptions>
 
-        <h3 class="mt-20">任务日志</h3>
+        <h3 class="mt-20">
+          任务日志
+        </h3>
         <el-timeline>
           <el-timeline-item
             v-for="(log, index) in currentTask.logs"
@@ -322,8 +643,15 @@
         </el-timeline>
       </div>
       <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
-        <el-button type="primary" @click="handleAddLog">添加日志</el-button>
+        <el-button @click="detailVisible = false">
+          关闭
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleAddLog"
+        >
+          添加日志
+        </el-button>
       </template>
     </el-dialog>
 
@@ -332,16 +660,36 @@
       title="更新任务状态"
       width="500px"
     >
-      <el-form :model="statusForm" label-width="100px">
+      <el-form
+        :model="statusForm"
+        label-width="100px"
+      >
         <el-form-item label="任务状态">
-          <el-select v-model="statusForm.status" placeholder="请选择状态">
-            <el-option label="未开始" value="not_started" />
-            <el-option label="进行中" value="in_progress" />
-            <el-option label="已完成" value="completed" />
+          <el-select
+            v-model="statusForm.status"
+            placeholder="请选择状态"
+          >
+            <el-option
+              label="未开始"
+              value="not_started"
+            />
+            <el-option
+              label="进行中"
+              value="in_progress"
+            />
+            <el-option
+              label="已完成"
+              value="completed"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="进度说明">
-          <el-input v-model="statusForm.content" type="textarea" :rows="3" placeholder="请输入进度说明" />
+          <el-input
+            v-model="statusForm.content"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入进度说明"
+          />
         </el-form-item>
         <el-form-item label="成果附件">
           <el-upload
@@ -350,13 +698,22 @@
             :auto-upload="false"
             multiple
           >
-            <el-button type="primary">上传附件</el-button>
+            <el-button type="primary">
+              上传附件
+            </el-button>
           </el-upload>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="statusVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleStatusSubmit">确定</el-button>
+        <el-button @click="statusVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleStatusSubmit"
+        >
+          确定
+        </el-button>
       </template>
     </el-dialog>
   </div>
