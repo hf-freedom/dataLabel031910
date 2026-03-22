@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { computed, onMounted } from 'vue'
+import { computed, watch } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useMenuStore } from '@/stores/menu'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -69,6 +69,14 @@ const userStore = useUserStore()
 const menuStore = useMenuStore()
 
 const currentRoute = computed(() => route)
+
+// 监听路由变化，更新当前激活的菜单
+watch(() => route.path, (newPath) => {
+  const menuItem = menuStore.menuList.find(item => item.path === newPath)
+  if (menuItem) {
+    menuStore.setActiveMenu(newPath)
+  }
+}, { immediate: true })
 
 const handleMenuSelect = (index: string) => {
   menuStore.setActiveMenu(index)
@@ -94,9 +102,7 @@ const handleCommand = async (command: string) => {
   }
 }
 
-onMounted(() => {
-  menuStore.setActiveMenu(route.path)
-})
+// onMounted 钩子已移除，路由监听在 watch 中处理
 </script>
 
 <style scoped lang="scss">

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { cancelAllPending } from '@/utils/request'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -79,6 +80,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  cancelAllPending()
   document.title = `${to.meta.title || '企业办公自动化系统'}`
   next()
 })
